@@ -1,0 +1,88 @@
+Compare WebLib.Iscript grants between 2 Users 
+
+
+Sometimes the easiest way to determine why one PeopleSoft user can't access a particular application feature is to compare
+that user's authorizations to another user who can access that same feature. We can look for differences in Role Memberships,
+Permission Lists inherited through roles, etc. Sometimes you have to dig deeper, into areas that most people find
+inexplicable altogether, like WebLibraries and their constituent IScript functions. 
+To that end, the following SQL will bare fruit.
+
+Step1. Create a SQL View (PS_AUTHWEBLIB_USR), which will return a list of authorized WebLib.IScripts for each user
+
+SELECT DISTINCT A.ROLEUSER 
+, C.MENUNAME 
+, C.BARNAME 
+, C.BARITEMNAME 
+, C.PNLITEMNAME 
+FROM PSROLEUSER A 
+, PSROLECLASS B 
+, PSAUTHITEM C 
+WHERE A.ROLENAME = B.ROLENAME 
+AND B.CLASSID = C.CLASSID 
+AND C.MENUNAME LIKE 'WEBLIB%' 
+
+Please note that each of the fields herein is a key field. 
+
+Step2. Build the following query, preferably using PeopleSoft Query Manager 
+
+SELECT A.MENUNAME 
+, A.BARNAME 
+, A.PNLITEMNAME 
+, 'Y' 
+, 'Y' 
+, A.OPRID 
+, '2' 
+FROM PS_AUTHWEBLIB_USR A 
+WHERE A.OPRID = 1 
+AND EXISTS (SELECT 'X' 
+FROM PS_AUTHWEBLIB_USR B 
+WHERE B.MENUNAME = A.MENUNAME 
+AND B.BARNAME = A.BARNAME 
+AND B.BARITEMNAME = A.BARITEMNAME 
+AND B.PNLITEMNAME = A.PNLITEMNAME 
+AND B.OPRID = 2) 
+UNION 
+SELECT C.MENUNAME 
+, C.BARNAME 
+, C.PNLITEMNAME 
+, 'Y' 
+, 'N' 
+, C.OPRID 
+, '2' 
+FROM PS_AUTHWEBLIB_USR C 
+WHERE C.OPRID = 1 
+AND NOT EXISTS (SELECT 'X' 
+FROM PS_AUTHWEBLIB_USR D 
+WHERE D.OPRID = 2 
+AND D.MENUNAME = C.MENUNAME 
+AND D.BARNAME = C.BARNAME 
+AND D.BARITEMNAME = C.BARITEMNAME 
+AND D.PNLITEMNAME = C.PNLITEMNAME) 
+UNION 
+SELECT E.MENUNAME 
+, E.BARNAME 
+, E.PNLITEMNAME 
+, 'N' 
+, 'Y' 
+, '1' 
+, E.OPRID 
+FROM PS_AUTHWEBLIB_USR E 
+WHERE E.OPRID = 2 
+AND NOT EXISTS (SELECT 'X' 
+FROM PS_AUTHWEBLIB_USR F 
+WHERE F.OPRID = 1 
+AND F.MENUNAME = E.MENUNAME 
+AND F.BARNAME = E.BARNAME 
+AND F.BARITEMNAME = E.BARITEMNAME 
+AND F.PNLITEMNAME = E.PNLITEMNAME) 
+ORDER BY 1, 2, 3
+
+Please note, that the story does not end here. The listing produced by this query will give you a leg up (maybe),
+on determining why one user can do something inside a PeopleSoft application while another user cannot.
+If the feature enabled user does indeed have WebLib.Iscript grants missing from the other user, you will need to determine 
+whether or not these additional grants are wholly or partially responsible for one user's success vs. the other's failure. 
+If you are lucky enough to have something familiar jog your memory (Ex. User 1 is granted access to WEBLIB_SOAPTOCI and User 2 is not)
+, therefore User 1 can use the ExcelToCi tool and User 2 cannot, congrats. On the other hand, the functionality 
+granted by a specific WebLib.IScript may not be easily intuited by its name. In addition, User 1 andor User 2 may have grants 
+to WebLib.IScripts that don't exist.
+I plan to build an application engine program, which will facilitate identifying invalid authorizations of this type in the not too distant future. 
