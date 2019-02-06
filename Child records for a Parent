@@ -1,0 +1,24 @@
+SELECT recname 
+FROM   pskeydefn 
+WHERE  recname IN (SELECT recname 
+                   FROM   pskeydefn 
+                   WHERE  fieldname IN (SELECT fieldname 
+                                        FROM   pskeydefn 
+                                        WHERE  recname = 'EX_SHEET_HDR' 
+                                               AND indexid = '_') 
+                          AND indexid = '_' 
+                   GROUP  BY recname 
+                   HAVING COUNT(fieldname) = (SELECT COUNT(fieldname) 
+                                              FROM   pskeydefn 
+                                              WHERE  recname = 'EX_SHEET_HDR' 
+                                                     AND indexid = '_') 
+                          AND Sum(keyposn) = (SELECT Sum(keyposn) 
+                                              FROM   pskeydefn 
+                                              WHERE  recname = 'EX_SHEET_HDR' 
+                                                     AND indexid = '_')) 
+GROUP  BY recname 
+HAVING COUNT(fieldname) > (SELECT COUNT(fieldname) 
+                           FROM   pskeydefn 
+                           WHERE  recname = 'EX_SHEET_HDR' 
+                                  AND indexid = '_') 
+WITH UR;
