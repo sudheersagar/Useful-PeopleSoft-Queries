@@ -1,0 +1,19 @@
+SELECT * 
+FROM   psclassdefn A 
+WHERE  NOT EXISTS (SELECT 'X' 
+                   FROM   psuserclassvw B 
+                   WHERE  A.classid = B.classid) 
+       AND NOT EXISTS (SELECT 'X' 
+                       FROM   psoprdefn B 
+                       WHERE  A.classid = B.oprclass) 
+       AND NOT EXISTS (SELECT 'X' 
+                       FROM   psoprdefn B 
+                       WHERE  A.classid = B.prcsprflcls) 
+       AND NOT EXISTS (SELECT 'X' 
+                       FROM   psoprdefn B 
+                       WHERE  A.classid = B.defaultnavhp) 
+       AND NOT EXISTS (SELECT 'X' 
+                       FROM   psoprdefn B 
+                       WHERE  A.classid = B.rowsecclass) 
+       AND A.lastupdoprid <> 'PPLSOFT' 
+ORDER  BY classid;
