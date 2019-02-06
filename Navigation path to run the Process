@@ -1,0 +1,26 @@
+SELECT A.portal_uri_seg2, 
+       Rtrim(E.portal_label) 
+       || ' >> ' 
+       || Rtrim(D.portal_label) 
+       || ' >> ' 
+       || Rtrim(C.portal_label) 
+       || ' >> ' 
+       || Rtrim(B.portal_label) 
+       || ' >> ' 
+       || Rtrim(A.portal_label) 
+FROM   psprsmdefn A 
+       LEFT JOIN psprsmdefn B 
+              ON B.portal_name = A.portal_name 
+                 AND B.portal_objname = A.portal_prntobjname 
+       LEFT JOIN psprsmdefn C 
+              ON C.portal_name = B.portal_name 
+                 AND C.portal_objname = B.portal_prntobjname 
+       LEFT JOIN psprsmdefn D 
+              ON D.portal_name = C.portal_name 
+                 AND D.portal_objname = C.portal_prntobjname 
+       LEFT JOIN psprsmdefn E 
+              ON E.portal_name = D.portal_name 
+                 AND E.portal_objname = D.portal_prntobjname 
+WHERE  A.portal_uri_seg2 IN (SELECT pnlgrpname 
+                             FROM   ps_prcsdefnpnl P 
+                             WHERE  P.prcsname = 'APX2001'); 
