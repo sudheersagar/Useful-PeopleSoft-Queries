@@ -1,0 +1,16 @@
+SELECT P.lastupddttm, 
+       P.projectname, 
+       P.projectdescr, 
+       P.lastupdoprid, 
+       O.oprdefndesc, 
+       P.tgtdbname "Last Target DB", 
+       COUNT(*)    "Count of Project Items" 
+FROM   psprojectdefn P 
+       LEFT OUTER JOIN psoprdefn O 
+                    ON O.oprid = P.lastupdoprid, 
+       psprojectitem I 
+WHERE  P.projectname = I.projectname 
+       AND DATE(P.lastupddttm) >= '01/01/2018' 
+GROUP  BY P.lastupddttm, 
+          P.projectname, 
+          P.projectdescr,
