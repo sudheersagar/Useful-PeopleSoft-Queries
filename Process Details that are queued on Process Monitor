@@ -1,0 +1,37 @@
+SELECT b.prcsinstance, 
+       b.prcstype, 
+       b.prcsname, 
+       (SELECT e.descr 
+        FROM   ps_prcsdefn e 
+        WHERE  e.prcstype = b.prcstype 
+               AND e.prcsname = b.prcsname)     descr, 
+       b.oprid, 
+       (SELECT a.oprdefndesc 
+        FROM   psoprdefn a 
+        WHERE  a.oprid = b.oprid)               NAME, 
+       runcntlid, 
+       (SELECT f.qryname 
+               || ', ' 
+               || f.descr 
+        FROM   ps_query_run_cntrl f 
+        WHERE  f.oprid = b.oprid 
+               AND f.run_cntl_id = b.runcntlid) qryname, 
+       recurname, 
+       runstatus, 
+       (SELECT xlatshortname 
+        FROM   psxlatitem c 
+        WHERE  c.fieldname = 'RUNSTATUS' 
+               AND c.fieldvalue = b.runstatus)  rundescr, 
+       diststatus, 
+       (SELECT d.xlatshortname 
+        FROM   psxlatitem d 
+        WHERE  d.fieldname = 'DISTSTATUS' 
+               AND d.fieldvalue = b.diststatus) distdescr, 
+       pt_retentiondays, 
+       rundttm, 
+       rqstdttm, 
+       lastupddttm, 
+       servernamerqst 
+FROM   psprcsrqst b 
+WHERE  runstatus IN ( 5 ) 
+ORDER  BY rundttm desc ; 
