@@ -1,0 +1,61 @@
+SELECT DISTINCT C.pnlname, 
+                D.addsrchrecname, 
+                D.searchrecname, 
+                R.recname, 
+                DB.subrecord    "IsSubRecord", 
+                P.occurslevel   "REC OccursLevel", 
+                R.sqltablename  "Non STD SQL Name", 
+                R.buildseqno, 
+                R.auditrecname, 
+                DB.recname_parent, 
+                P.fieldname, 
+                P.occurslevel   "FLD OccursLevel", 
+                DB.deffieldname "Default Value", 
+                P.fieldtype, 
+                ( CASE fieldtype 
+                    WHEN 0 THEN 'Label' 
+                    WHEN 6 THEN 'LongEditBox' 
+                    WHEN 12 THEN 'PushButton' 
+                    WHEN 1 THEN 'Frame' 
+                    WHEN 7 THEN 'CheckBox' 
+                    WHEN 13 THEN 'SecondaryPage (SUBPNLNAME)' 
+                    WHEN 2 THEN 'GroupBox' 
+                    WHEN 8 THEN 'RadioButton' 
+                    WHEN 14 THEN 'TreeControl' 
+                    WHEN 3 THEN 'StaticImage' 
+                    WHEN 9 THEN 'Image' 
+                    WHEN 15 THEN 'Gridcontrol' 
+                    WHEN 4 THEN 'EditBox' 
+                    WHEN 10 THEN 'ScrollBar' 
+                    WHEN 16 THEN 'PushButton (GoToMenu, PNLGRPNAME)' 
+                    WHEN 5 THEN 'ComboBox' 
+                    WHEN 11 THEN 'SubPage' 
+                    WHEN 18 THEN 'SecPage (SUBPNLNAME)' 
+                    WHEN 19 THEN 'PSGrid' 
+                    WHEN 20 THEN 'Tree' 
+                    WHEN 21 THEN 'PushButton (calls SecondaryPage)' 
+                    WHEN 23 THEN 'HorzRule (Horizontal Line)' 
+                    WHEN 24 THEN 'TabSeperator' 
+                    WHEN 25 THEN 'HTML Area' 
+                    WHEN 26 THEN 'PushButton (Hyperlink to PromptAction)' 
+                    WHEN 27 THEN 'Scroll Area' 
+                  END )         "FLDType Descr", 
+                DB.edittable, 
+                DB.setcntrlfld, 
+                P.label_id      "Label ID", 
+                P.lbltext       "Label Text", 
+                P.subpnlname 
+FROM   pspnlgroup C 
+       INNER JOIN pspnlfield P 
+               ON C.pnlname = P.pnlname 
+       INNER JOIN psrecdefn R 
+               ON R.recname = P.recname 
+       FULL OUTER JOIN psrecfielddb DB 
+                    ON R.recname = DB.recname 
+                       AND P.fieldname = DB.fieldname 
+       INNER JOIN pspnlgrpdefn D 
+               ON C.pnlgrpname = D.pnlgrpname 
+                  AND C.market = D.market 
+WHERE  C.pnlgrpname = '<Component name>' 
+ORDER  BY P.occurslevel 
+WITH UR; 
