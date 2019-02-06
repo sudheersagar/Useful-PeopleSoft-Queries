@@ -1,0 +1,57 @@
+--Query to determine which records user can see 
+
+SELECT DISTINCT B.tree_node, 
+                Z.recdescr 
+FROM   pstreedefn A, 
+       pstreenode B, 
+       ps_scrty_acc_grp C, 
+       pstreenode E, 
+       psroleclass X, 
+       psroleuser Y, 
+       psrecdefn Z 
+WHERE  A.setid = ' ' 
+       AND A.tree_strct_id = 'ACCESS_GROUP' 
+       AND A.eff_status = 'A' 
+       AND A.effdt = (SELECT Max (D.effdt) 
+                      FROM   pstreedefn D 
+                      WHERE  D.setid = ' ' 
+                             AND D.tree_name = A.tree_name 
+                             AND D.effdt <= To_date ( 
+                                 To_char (sysdate, 'YYYY-MM-DD'), 
+                                            'YYYY-MM-DD')) 
+       AND Y.roleuser = '<your id>'
+       AND Y.rolename = X.rolename 
+       AND X.classid = C.classid 
+       AND C.tree_name = A.tree_name 
+       AND C.accessible = 'Y' 
+       AND B.setid = ' ' 
+       AND B.tree_name = E.tree_name 
+       AND B.effdt = E.effdt 
+       AND B.tree_node_type = 'R' 
+       AND B.tree_node = Z.recname 
+       AND Z.rectype IN ( 0, 1, 6 ) 
+       AND E.setid = ' ' 
+       AND E.tree_name = A.tree_name 
+       AND E.effdt = A.effdt 
+       AND E.tree_node_type = 'G' 
+       AND B.tree_node_num BETWEEN E.tree_node_num AND E.tree_node_num_end 
+       AND C.access_group = E.tree_node 
+       AND ( ( NOT EXISTS (SELECT 'X' 
+                           FROM   ps_scrty_acc_grp F 
+                           WHERE  F.classid = X.classid 
+                                  AND F.tree_name = A.tree_name 
+                                  AND F.accessible = 'N') ) 
+              OR ( E.tree_node_num = (SELECT Max (G.tree_node_num) 
+                                      FROM   pstreenode G, 
+                                             ps_scrty_acc_grp H 
+                                      WHERE  G.setid = ' ' 
+                                             AND G.tree_name = A.tree_name 
+                                             AND G.effdt = A.effdt 
+                                             AND G.tree_node_type = 'G' 
+                                             AND B.tree_node_num BETWEEN 
+                                                 G.tree_node_num AND 
+                                                 G.tree_node_num_end 
+                                             AND H.classid = X.classid 
+                                             AND H.tree_name = A.tree_name 
+                                             AND H.access_group = 
+           G.tree_node) ) )  ; 
