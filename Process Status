@@ -1,0 +1,18 @@
+SELECT a.prcsname, 
+       a.oprid, 
+       a.servernamerun, 
+       b.xlatlongname                                             AS STATUS, 
+       a.rundttm, 
+       Trunc (Mod (( a.enddttm - a.rundttm ) * 24, 24))           "Hr", 
+       Trunc (Mod (( a.enddttm - a.rundttm ) * 24 * 60, 60))      mi, 
+       Trunc (Mod (( a.enddttm - a.rundttm ) * 24 * 60 * 60, 60)) sec, 
+       a.prcsinstance, 
+       c.outputdir 
+FROM   psprcsrqst a, 
+       psxlatitem b, 
+       ps_cdm_list c 
+WHERE  b.fieldname = 'RUNSTATUS' 
+       AND b.fieldvalue = a.runstatus 
+       AND a.prcsinstance = c.prcsinstance 
+       AND a.prcsname = 'your_process_name' 
+ORDER  BY 5 desc;
