@@ -1,0 +1,121 @@
+-- IScript Navigation and access details.
+SELECT DISTINCT O.roleuser, 
+                O.rolename, 
+                R.classid, 
+                A.portal_name, 
+                A.portal_objname, 
+                A.portal_uri_seg1            RECORD_NAME, 
+                A.portal_uri_seg2            FIELD_NAME, 
+                A.portal_uri_seg3            PEOPLECODE_EVENT, 
+                A.portal_uri_seg4            ISCRIPT_FUNCTION, 
+                TRIM((( CONCAT(CONCAT(CONCAT(CONCAT(CONCAT(CONCAT( 
+                                                    CONCAT(( CASE 
+                                                               WHEN 
+                                                          Rtrim(H.portal_label) 
+                                                          <> 
+                                                          'Root' THEN 
+                        CONCAT(Rtrim(H.portal_label), 
+                        ' > ') 
+                        ELSE ' ' 
+                        END ), ( CASE 
+                                 WHEN 
+                            Rtrim(G.portal_label) <> 
+                            'Root' 
+                               THEN 
+                        CONCAT(Rtrim(G.portal_label), 
+                        ' > ') 
+                        ELSE ' ' 
+                        END )), ( CASE 
+                        WHEN Rtrim(F.portal_label) <> 
+                        'Root' 
+                        THEN 
+                        CONCAT(Rtrim(F.portal_label), 
+                        ' > ') 
+                        ELSE ' ' 
+                        END )), ( CASE 
+                        WHEN 
+                        Rtrim(E.portal_label) <> 'Root' THEN 
+                        CONCAT(Rtrim(E.portal_label), ' > ') 
+                        ELSE ' ' 
+                        END )), ( CASE 
+                        WHEN Rtrim(D.portal_label) <> 'Root' THEN 
+                        CONCAT(Rtrim(D.portal_label), ' > ') 
+                        ELSE ' ' 
+                        END )), ( CASE 
+                        WHEN Rtrim(C.portal_label) <> 'Root' THEN 
+                        CONCAT(Rtrim(C.portal_label), ' > ') 
+                        ELSE ' ' 
+                        END )), ( CASE 
+                        WHEN Rtrim(B.portal_label) <> 'Root' THEN 
+                        CONCAT(Rtrim(B.portal_label), ' > ') 
+                        ELSE ' ' 
+                        END )), ( CASE 
+                                    WHEN Rtrim(A.portal_label) <> 'Root' THEN ( 
+                                    ( CASE 
+                                        WHEN A.portal_cref_usgt = 
+                                             'LINK' THEN 
+                                    Decode(Rtrim(A.portal_label), '', (SELECT 
+                                    DISTINCT 
+Max( 
+                         Rtrim(A1.portal_label)) 
+                          FROM 
+  psprsmdefn A1 
+                                     WHERE 
+  A1.portal_name = A.portal_link_portal 
+  AND 
+  A1.portal_objname = A.portal_linkobjname 
+                                          AND 
+  A1.portal_name = A.portal_name) 
+  , 
+Rtrim(A.portal_label)) 
+ELSE Rtrim(A.portal_label) 
+END )) 
+END )) ))) AS NAVIGATION 
+FROM   psprsmperm S, 
+(((((((psprsmdefn A 
+LEFT JOIN psprsmdefn B 
+ON B.portal_name = A.portal_name 
+AND B.portal_reftype = 'F' 
+AND B.portal_objname = A.portal_prntobjname) 
+LEFT JOIN psprsmdefn C 
+ON C.portal_name = B.portal_name 
+AND C.portal_reftype = 'F' 
+AND C.portal_objname = B.portal_prntobjname) 
+LEFT JOIN psprsmdefn D 
+ON D.portal_name = C.portal_name 
+AND D.portal_reftype = 'F' 
+AND D.portal_objname = C.portal_prntobjname) 
+LEFT JOIN psprsmdefn E 
+ON E.portal_name = D.portal_name 
+AND E.portal_reftype = 'F' 
+AND E.portal_objname = D.portal_prntobjname) 
+LEFT JOIN psprsmdefn F 
+ON F.portal_name = E.portal_name 
+AND F.portal_reftype = 'F' 
+AND F.portal_objname = E.portal_prntobjname) 
+LEFT JOIN psprsmdefn G 
+ON G.portal_name = F.portal_name 
+AND G.portal_reftype = 'F' 
+AND G.portal_objname = F.portal_prntobjname) 
+LEFT JOIN psprsmdefn H 
+ON H.portal_name = G.portal_name 
+AND H.portal_reftype = 'F' 
+AND H.portal_objname = G.portal_prntobjname), 
+psroleclass R, 
+psroleuser O 
+WHERE  A.portal_name = S.portal_name 
+AND A.portal_reftype = S.portal_reftype 
+AND A.portal_objname = S.portal_objname 
+AND A.portal_cref_urlt IN ( 'USCR', 'UGEN' ) 
+AND ( ( S.portal_permtype = 'P' 
+AND R.classid = S.portal_permname ) 
+OR ( S.portal_permtype = 'R' 
+AND R.rolename = S.portal_permname ) ) 
+AND NOT EXISTS (SELECT 'X' 
+FROM   psprsmsysattrvl ATTR 
+WHERE  ATTR.portal_name = A.portal_name 
+AND portal_attr_nam = 'PORTAL_HIDE_FROM_NAV' 
+AND ATTR.portal_objname = A.portal_objname) 
+AND A.portal_name = 'EMPLOYEE' 
+AND R.rolename = O.rolename 
+AND O.roleuser IN ( '<your id>' );
