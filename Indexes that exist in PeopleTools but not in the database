@@ -1,0 +1,52 @@
+-- Indexes that exist in PeopleTools but not in the database 
+
+
+SELECT R.recname, 
+       R.recdescr, 
+       R.indexcount, 
+       R.sqltablename, 
+       'PS' 
+       || I.indexid 
+       || I.recname AS PS_INDEXNAME, 
+       I.indexid, 
+       ( CASE 
+           WHEN I.indextype = 1 THEN 'Key' 
+           WHEN I.indextype = 2 THEN 'User' 
+           WHEN I.indextype = 3 THEN 'Alt' 
+           WHEN I.indextype = 4 THEN 'User' 
+           ELSE 'Unknown' 
+         END )      AS PS_INDEXTYPE 
+FROM   psrecdefn R 
+       INNER JOIN psindexdefn I 
+               ON R.recname = I.recname 
+WHERE  R.rectype = 0 
+       AND NOT EXISTS (SELECT 1 
+                       FROM   SYSIBM.sysindexes 
+                       WHERE  tbcreator = 'HRCNF' 
+                              AND name = 'PS' 
+                                         || I.indexid 
+                                         || I.recname) 
+ORDER  BY R.recname, 
+          ps_indexname; 
+
+-- 
+--Indexes that exist in the database but not in PeopleTools
+
+
+SELECT DI.tbname, 
+       DI.name, 
+       DI.indextype AS DB_INDEXTYPE, 
+       DI.uniquerule, 
+       DI.colcount 
+--nvl(R.RECNAME, 'Not Found in Application Designer') as RECNAME 
+FROM   (SYSIBM.sysindexes DI 
+        LEFT OUTER JOIN psrecdefn R 
+                     ON Replace(DI.name, 'PS_', '') = R.recname 
+                        AND DI.tbcreator = 'HRCNF') 
+WHERE  NOT EXISTS (SELECT 1 
+                   FROM   psindexdefn 
+                   WHERE  'PS' 
+                          || indexid 
+                          || recname = DI.name) 
+ORDER  BY DI.tbname, 
+          DI.name; 
