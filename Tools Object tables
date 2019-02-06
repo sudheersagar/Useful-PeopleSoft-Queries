@@ -1,0 +1,58 @@
+SELECT * FROM PS_APP_DES_OBJECTS;
+
+ PSOWNER  APP_DES_CATEGORY OBJNAME                        DESCR                          OBJECTTYPE RECNAME
+ -------- ---------------- ------------------------------ ------------------------------ ---------- ---------------
+ PPLSOFT  1                ACTIVITYNAME                   Activities                             18 PSACTIVITYDEFN 
+ PPLSOFT  1                AEAPPLICATIONID                App Engine Programs                    33 PSAEAPPLDEFN   
+ PPLSOFT  1                ANALYTIC_MODEL_ID              Analytic Models                        73 PSACEMDLDEFN   
+ PPLSOFT  1                APPLICATION_PACKAGE            Application Packages                   57 PSPTPACKAGEDEFV
+ PPLSOFT  1                APPRRULESET                    Approval Rule Sets                     38 APPR_RULE_HDR  
+ PPLSOFT  1                BUSINESSPROCESS                Business Processes                     17 PSBUSPROCDEFN  
+ PPLSOFT  1                CHANNEL                        Message Channels                       36 PSCHNLDEFN     
+ PPLSOFT  1                COMPONENT                      Components                              7 PSPNLGRPDEFN   
+ PPLSOFT  1                COMPONENTINTERFACE             Component Interfaces                   32 PSBCDEFN       
+ PPLSOFT  1                DBFIELD                        Fields                                  2 PSDBFIELD      
+ PPLSOFT  1                FILELAYOUT                     File Layouts                           31 PSFLDDEFN      
+ PPLSOFT  1                FILEREFERENCE                  File References                      9999                
+ PPLSOFT  1                HTML                           HTML                                   51 PSPTCONTHTML_VW
+ PPLSOFT  1                IMAGE                          Images                                 49 PSPTCONTIMG_VW 
+ PPLSOFT  1                INTERFACE_OBJECT               Business Interlinks                    29 PSIODEFN       
+ PPLSOFT  1                MENU                           Menus                                   6 PSMENUDEFN     
+ PPLSOFT  1                MESSAGE                        Messages                               37 PSMSGDEFN      
+ PPLSOFT  1                MESSAGE_NODE                   Message Nodes                        9999 PSMSGNODEDEFN  
+ PPLSOFT  1                MOBILEPAGE                     Mobile Pages                           64 PSMPDEFN       
+ PPLSOFT  1                OPTMODEL                       Optimization Models                    67 PSOPTMODEL     
+ PPLSOFT  1                PAGE                           Pages                                   5 PSPNLDEFN      
+ PPLSOFT  1                PROBTYPE                       Analytic Types                         60 PSOPTPRBTYPE   
+ PPLSOFT  1                PROJECT                        Projects                             9998 PSPROJECTDEFN  
+ PPLSOFT  1                QRYNAME                        Queries                                10 PSPTQRYDEFS_VW 
+ PPLSOFT  1                RECORD                         Records                                 0 PSRECDEFN      
+ PPLSOFT  1                SQL                            SQL                                    30 PSPTSQLDEFN_VW 
+ PPLSOFT  1                STYLESHEET                     Style Sheets                           50 PSPTSTYLESHT0_V
+ PPLSOFT  2                CHANGE_CONTROL                 Change Control                       9999                
+ PPLSOFT  2                DATA_ADMINISTRATION            Build / Data Admin.                  9999                
+ PPLSOFT  2                LANGUAGETRANSLATIONS           Language Translations                9999                
+ PPLSOFT  2                MERGE                          Merge                                9999                
+ PPLSOFT  2                PCDEBUGGER                     Peoplecode Debugger                  9999                
+ PPLSOFT  2                PCODEWIP                       PeopleCode Work-In-Progress          9999                
+ PPLSOFT  2                SQL                            SQL Editor                           9999                
+ PPLSOFT  2                UPGRADE                        Upgrade                              9999                
+ PPLSOFT  2                VISUAL_MERGE_PAGE              Visual Merge Page                    9999                
+ PPLSOFT  3                ACCESS_PROFILE                 Access Profiles                      9999                
+ PPLSOFT  3                FIELD_FORMAT                   Field Formats                           3 PSFMTDEFN      
+ PPLSOFT  3                STYLE                          Styles                                 15 PSSTYLEDEFN    
+ PPLSOFT  3                SYSCOLOR                       Colors                               9999                
+ PPLSOFT  3                TOOLBAR                        Tool Bar                             9999                
+ PPLSOFT  3                TYPECODE                       File Type Codes                        69 PSTYPECODEDEFN 
+ PPLSOFT  4                MCF_AGENT                      MCF Agent                            9999                
+ PPLSOFT  4                MCF_CHAT_CUST                  MCF Customer                         9999                
+ PPLSOFT  4                MCF_CTISRV                     MCF CTI Server                       9999                
+ PPLSOFT  4                MCF_LOGGER                     MCF MCFLOG Server                    9999                
+ PPLSOFT  4                MCF_NOTIFY                     MCF Notify Queue                     9999                
+ PPLSOFT  4                MCF_SUPER                      MCF Supervisor                       9999                
+ PPLSOFT  4                MCF_UQSRV                      MCF UQSRV Server                     9999                
+ PPLSOFT  4                OPTIMIZATION                   Optimization Notify                  9999                
+ PPLSOFT  4                REPORTING                      Reporting Window                     9999                
+ PPLSOFT  5                TRANSLATE                      Translate Tables                        4 PSPTXLATITEM_VW
+ PPLSOFT  5                TREE_NAME                      Trees                                  12 PSPTTREEDEFN_VW
+ PPLSOFT  5                TREE_STRCT_ID                  Tree Structures                        11 PSTREESTRCT    
