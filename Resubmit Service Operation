@@ -1,0 +1,15 @@
+-- Resubmit "done" service operation.
+
+SELECT * 
+FROM   psapmsgsubcon 
+WHERE  ib_operationname = '<service operation name>' 
+       AND statusstring = 'DONE' 
+       AND queueseqid = <queue number>; 
+
+-- To change the status from Done to Cancelled so that you can resubmit it  
+UPDATE psapmsgsubcon 
+SET    statusstring = 'CNCLD', 
+       retrycount = 0, 
+       subconstatus = 8 
+WHERE  ib_operationname = '<service operation name>' 
+       AND queueseqid = <queue number>; 
