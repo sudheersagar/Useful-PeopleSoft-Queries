@@ -1,0 +1,36 @@
+-- Missing Templates from BI Report Definitions
+
+SELECT RD.report_defn_id, 
+       RD.descr         AS REPORT_DESCR, 
+       RD.pt_report_status, 
+       RD.ds_id         AS DATA_SOURCE_ID, 
+       RD.pt_template_type, 
+       RT.tmpldefn_id, 
+       RT.is_default    AS IS_DEFAULT_TEMPLATE, 
+       RD.lastupdoprid  AS REPORT_LASTUPDOPRID, 
+       RD.lastupddttm   AS REPORT_LASTUPDDTTM, 
+       DS.ds_type, 
+       DS.descr         AS DATA_SOURCE_DESCR, 
+       DS.active_flag, 
+       DS.schemafile, 
+       DS.sampledatfile, 
+       DS.registered_by AS DATA_SOURCE_REGISTERED_BY, 
+       DS.lastupdoprid  AS DATA_SOURCE_LASTUPDOPRID, 
+       DS.lastupddttm   AS DATA_SOURCE_LASTUPDDTTM, 
+       TD.descr         AS TEMPLATE_DESCR, 
+       TD.registered_by AS TEMPLATE_REGISTERED_BY, 
+       TD.lastupdoprid  AS TEMPLATE_LASTUPDOPRID, 
+       TD.lastupddttm   AS TEMPLATE_LASTUPDDTTM 
+FROM   psxprptdefn RD 
+       INNER JOIN psxprpttmpl RT 
+               ON RD.report_defn_id = RT.report_defn_id 
+       INNER JOIN psxpdatasrc DS 
+               ON DS.ds_type = RD.ds_type 
+                  AND DS.ds_id = RD.ds_id 
+       INNER JOIN psxptmpldefn TD 
+               ON RT.tmpldefn_id = TD.tmpldefn_id 
+       LEFT OUTER JOIN psxptmplfiledef TFD 
+                    ON TD.tmpldefn_id = TFD.tmpldefn_id 
+WHERE  TFD.tmpldefn_id IS NULL 
+ORDER  BY RD.report_defn_id, 
+          RT.tmpldefn_id;  
