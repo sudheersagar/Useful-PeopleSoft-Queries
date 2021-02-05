@@ -4,7 +4,7 @@ SELECT A.projectname,
          WHEN A.objecttype = 0 THEN 'Record' 
          WHEN A.objecttype = 1 THEN 'Index' 
          WHEN A.objecttype = 2 THEN 'Field' 
-         WHEN A.objecttype = 3 THEN 'Format Definition' 
+         WHEN A.objecttype = 3 THEN 'Field Format' 
          WHEN A.objecttype = 4 THEN 'Translate' 
          WHEN A.objecttype = 5 THEN 'Page' 
          WHEN A.objecttype = 6 THEN 'Menu' 
@@ -22,10 +22,10 @@ SELECT A.projectname,
          WHEN A.objecttype = 18 THEN 'Activity' 
          WHEN A.objecttype = 19 THEN 'Role' 
          WHEN A.objecttype = 20 THEN 'Process Definition' 
-         WHEN A.objecttype = 21 THEN 'Process Server' 
+         WHEN A.objecttype = 21 THEN 'Server Definition' 
          WHEN A.objecttype = 22 THEN 'Process Type' 
-         WHEN A.objecttype = 23 THEN 'Process Job' 
-         WHEN A.objecttype = 24 THEN 'Process Recurrence' 
+         WHEN A.objecttype = 23 THEN 'Job' 
+         WHEN A.objecttype = 24 THEN 'Recurrence Definition' 
          WHEN A.objecttype = 25 THEN 'Message' 
          WHEN A.objecttype = 26 THEN 'Dimension' 
          WHEN A.objecttype = 27 THEN 'Analysis Model' 
@@ -52,17 +52,17 @@ SELECT A.projectname,
          WHEN A.objecttype = 48 THEN 'Component Record Field PeopleCode' 
          WHEN A.objecttype = 49 THEN 'Image' 
          WHEN A.objecttype = 50 THEN 'Style Sheet' 
-         WHEN A.objecttype = 51 THEN 'HTML Catalog' 
+         WHEN A.objecttype = 51 THEN 'HTML' 
          WHEN A.objecttype = 52 THEN 'Unused' 
-         WHEN A.objecttype = 53 THEN 'Class' 
+         WHEN A.objecttype = 53 THEN 'Permission List' 
          WHEN A.objecttype = 54 THEN 'Portal Registry Definition' 
          WHEN A.objecttype = 55 THEN 'Portal Registry Structure' 
-         WHEN A.objecttype = 56 THEN 'URL Definitions' 
+         WHEN A.objecttype = 56 THEN 'URL' 
          WHEN A.objecttype = 57 THEN 'Application Package' 
          WHEN A.objecttype = 58 THEN 'Application Package PeopleCode' 
          WHEN A.objecttype = 59 THEN 'Portal Registry User Homepage' 
          WHEN A.objecttype = 60 THEN 'Problem (Analytic) Type Definition' 
-         WHEN A.objecttype = 61 THEN 'Data Archival' 
+         WHEN A.objecttype = 61 THEN 'Archive Template' 
          WHEN A.objecttype = 62 THEN 'XSLT' 
          WHEN A.objecttype = 63 THEN 'Portal Registry User Favorite' 
          WHEN A.objecttype = 64 THEN 'Mobile Page' 
@@ -72,7 +72,7 @@ SELECT A.projectname,
          WHEN A.objecttype = 68 THEN 'File Reference' 
          WHEN A.objecttype = 69 THEN 'File Reference Type Code' 
          WHEN A.objecttype = 70 THEN 'Archive Objects' 
-         WHEN A.objecttype = 71 THEN 'Archive Templates' 
+         WHEN A.objecttype = 71 THEN 'Archive Templates (Type 2)' 
          WHEN A.objecttype = 72 THEN 'Diagnostic Plug-In' 
          WHEN A.objecttype = 73 THEN 'Analytic Model' 
          WHEN A.objecttype = 74 THEN 'Not Used' 
@@ -122,11 +122,15 @@ SELECT A.projectname,
          WHEN A.objecttype = 118 THEN 'Search Contexts' 
          WHEN A.objecttype = 119 THEN 'Integration Groups' 
          WHEN A.objecttype = 120 THEN 'HtmlSchema' 
-         WHEN A.objecttype = 121 THEN 'DocumentLayoutManager' 
-         WHEN A.objecttype = 122 THEN 'DocumentTemplateManager' 
-         WHEN A.objecttype = 123 THEN 'CompositeQueryManager' 
-         WHEN A.objecttype = 124 THEN 'DocumentPeopleCodeManager' 
-         WHEN A.objecttype = 125 THEN 'MAPAdminManager' 
+         WHEN A.objecttype = 121 THEN 'MAP Layouts' 
+         WHEN A.objecttype = 122 THEN 'MAP Templates' 
+         WHEN A.objecttype = 123 THEN 'Composite Query' 
+         WHEN A.objecttype = 124 THEN 'MAP PeopleCode' 
+         WHEN A.objecttype = 125 THEN 'MAP Admin Manager' 
+         WHEN A.objecttype = 126 THEN 'MAP Store Manager' 
+         WHEN A.objecttype = 127 THEN 'RC User Personalization Manager' 
+         WHEN A.objecttype = 128 THEN 'External Entity Manager' 
+         WHEN A.objecttype = 256 THEN 'Invalid Object Type' 
          ELSE 'Unknown' 
        END "Object Type", 
        A.objectid1, 
@@ -749,11 +753,11 @@ SELECT A.projectname,
          ELSE 'Unknown' 
        END "Copy Done?" 
 FROM   psprojectitem A 
-WHERE  A.projectname IN ( '<add your Projects>' ) 
+WHERE  A.projectname IN ( 'xxxxxxxxx' ) -- Replace your Project Name(s) 
 ORDER  BY A.projectname, 
           A.objecttype, 
           A.objectid1, 
           A.objectid2, 
           A.objectid3, 
           A.objectid4 
-WITH UR;  
+WITH UR; 
