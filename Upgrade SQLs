@@ -1486,6 +1486,343 @@ A.OBJECTID4,
  
  ++++++++++++++++++++++++++++++++++++++++++++++++
  
+ BI Data Source:
+---------------
+
+SELECT A.objectvalue1, 
+       A.objectvalue2, 
+       DS.ds_type, 
+       CASE 
+         WHEN DS.ds_type = 'CPQ' THEN 'Composite Query' 
+         WHEN DS.ds_type = 'CQR' THEN 'Connected Query' 
+         WHEN DS.ds_type = 'QRY' THEN 'Query' 
+         WHEN DS.ds_type = 'RST' THEN 'Rowset' 
+         WHEN DS.ds_type = 'XMD' THEN 'XMLDoc Object' 
+         WHEN DS.ds_type = 'XML' THEN 'XML File' 
+         ELSE 'Unknown' 
+       END                  "Data Type", 
+       DS.ds_id, 
+       DS.active_flag, 
+       DS.registered_by, 
+       DS.objectownerid, 
+       (SELECT X.xlatlongname 
+        FROM   psxlatitem X 
+        WHERE  X.fieldname = 'OBJECTOWNERID' 
+               AND X.fieldvalue = DS.objectownerid 
+               AND X.eff_status = 'A' 
+               AND ( X.effdt IS NULL 
+                      OR ( X.effdt = (SELECT Max(X1.effdt) 
+                                      FROM   psxlatitem X1 
+                                      WHERE  X.fieldname = X1.fieldname 
+                                             AND X.fieldvalue = X1.fieldvalue 
+                                             AND X.effdt <= CURRENT DATE) ) )), 
+       DS.lastupdoprid, 
+       DATE(DS.lastupddttm) "Last Updated By", 
+       DS.descr, 
+       CASE 
+         WHEN A.sourcestatus = 0 THEN 'Unknown' 
+         WHEN A.sourcestatus = 1 THEN 'Absent' 
+         WHEN A.sourcestatus = 2 THEN 'Changed' 
+         WHEN A.sourcestatus = 3 THEN 'Unchanged' 
+         WHEN A.sourcestatus = 4 THEN 'Custom Changed' 
+         WHEN A.sourcestatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.sourcestatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END                  "Source Status", 
+       CASE 
+         WHEN A.targetstatus = 0 THEN 'Unknown' 
+         WHEN A.targetstatus = 1 THEN 'Absent' 
+         WHEN A.targetstatus = 2 THEN 'Changed' 
+         WHEN A.targetstatus = 3 THEN 'Unchanged' 
+         WHEN A.targetstatus = 4 THEN 'Custom Changed' 
+         WHEN A.targetstatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.targetstatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END                  "Target Status" 
+FROM   psprojectitem A 
+       LEFT OUTER JOIN psxpdatasrc DS 
+                    ON A.objectvalue1 = DS.ds_type 
+                       AND A.objectvalue2 = DS.ds_id 
+WHERE  A.projectname = 'xxxxxxxxxxxxxxxxxx' 
+       AND A.objecttype = 88 
+ORDER  BY 1, 
+          2 
+WITH UR; 
+
+
+BI Report Definition:
+---------------------
+
+SELECT A.objectvalue1, 
+       RD.report_defn_id, 
+       RD.report_category_id, 
+       RD.ds_type, 
+       CASE 
+         WHEN RD.ds_type = 'CPQ' THEN 'Composite Query' 
+         WHEN RD.ds_type = 'CQR' THEN 'Connected Query' 
+         WHEN RD.ds_type = 'QRY' THEN 'Query' 
+         WHEN RD.ds_type = 'RST' THEN 'Rowset' 
+         WHEN RD.ds_type = 'XMD' THEN 'XMLDoc Object' 
+         WHEN RD.ds_type = 'XML' THEN 'XML File' 
+         ELSE '' 
+       END                  "Data Type", 
+       RD.ds_id, 
+       RD.pt_template_type, 
+       RD.pt_report_status, 
+       RD.registered_by, 
+       RD.objectownerid, 
+       (SELECT X.xlatlongname 
+        FROM   psxlatitem X 
+        WHERE  X.fieldname = 'OBJECTOWNERID' 
+               AND X.fieldvalue = RD.objectownerid 
+               AND X.eff_status = 'A' 
+               AND ( X.effdt IS NULL 
+                      OR ( X.effdt = (SELECT Max(X1.effdt) 
+                                      FROM   psxlatitem X1 
+                                      WHERE  X.fieldname = X1.fieldname 
+                                             AND X.fieldvalue = X1.fieldvalue 
+                                             AND X.effdt <= CURRENT DATE) ) )), 
+       RD.lastupdoprid, 
+       DATE(RD.lastupddttm) "Last Updated By", 
+       RD.descr, 
+       CASE 
+         WHEN A.sourcestatus = 0 THEN 'Unknown' 
+         WHEN A.sourcestatus = 1 THEN 'Absent' 
+         WHEN A.sourcestatus = 2 THEN 'Changed' 
+         WHEN A.sourcestatus = 3 THEN 'Unchanged' 
+         WHEN A.sourcestatus = 4 THEN 'Custom Changed' 
+         WHEN A.sourcestatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.sourcestatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END                  "Source Status", 
+       CASE 
+         WHEN A.targetstatus = 0 THEN 'Unknown' 
+         WHEN A.targetstatus = 1 THEN 'Absent' 
+         WHEN A.targetstatus = 2 THEN 'Changed' 
+         WHEN A.targetstatus = 3 THEN 'Unchanged' 
+         WHEN A.targetstatus = 4 THEN 'Custom Changed' 
+         WHEN A.targetstatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.targetstatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END                  "Target Status" 
+FROM   psprojectitem A 
+       LEFT OUTER JOIN psxprptdefn RD 
+                    ON A.objectvalue1 = RD.report_defn_id 
+WHERE  A.projectname = 'xxxxxxxxxxxxxxxxxx' 
+       AND A.objecttype = 86 
+ORDER  BY 1, 
+          2 
+WITH UR; 
+
+
+BI Template Definitions:
+-----------------------
+
+SELECT A.objectvalue1, 
+       T.report_defn_id, 
+       T.tmpldefn_id, 
+       T.is_default, 
+       TMPL.report_category_id, 
+       TMPL.pt_template_type, 
+       TMPL.is_subtemplate, 
+       TMPL.registered_by, 
+       TMPL.objectownerid, 
+       (SELECT X.xlatlongname 
+        FROM   psxlatitem X 
+        WHERE  X.fieldname = 'OBJECTOWNERID' 
+               AND X.fieldvalue = TMPL.objectownerid 
+               AND X.eff_status = 'A' 
+               AND ( X.effdt IS NULL 
+                      OR ( X.effdt = (SELECT Max(X1.effdt) 
+                                      FROM   psxlatitem X1 
+                                      WHERE  X.fieldname = X1.fieldname 
+                                             AND X.fieldvalue = X1.fieldvalue 
+                                             AND X.effdt <= CURRENT DATE) ) )), 
+       TMPL.lastupdoprid, 
+       DATE(TMPL.lastupddttm) "Last Updated By", 
+       TMPL.descr, 
+       CASE 
+         WHEN A.sourcestatus = 0 THEN 'Unknown' 
+         WHEN A.sourcestatus = 1 THEN 'Absent' 
+         WHEN A.sourcestatus = 2 THEN 'Changed' 
+         WHEN A.sourcestatus = 3 THEN 'Unchanged' 
+         WHEN A.sourcestatus = 4 THEN 'Custom Changed' 
+         WHEN A.sourcestatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.sourcestatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END                    "Source Status", 
+       CASE 
+         WHEN A.targetstatus = 0 THEN 'Unknown' 
+         WHEN A.targetstatus = 1 THEN 'Absent' 
+         WHEN A.targetstatus = 2 THEN 'Changed' 
+         WHEN A.targetstatus = 3 THEN 'Unchanged' 
+         WHEN A.targetstatus = 4 THEN 'Custom Changed' 
+         WHEN A.targetstatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.targetstatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END                    "Target Status" 
+FROM   psprojectitem A 
+       LEFT OUTER JOIN psxprpttmpl T 
+                    ON A.objectvalue1 = T.tmpldefn_id 
+       LEFT OUTER JOIN psxptmpldefn TMPL 
+                    ON T.tmpldefn_id = TMPL.tmpldefn_id 
+WHERE  A.projectname = 'xxxxxxxxxxxxxxxxxx' 
+       AND A.objecttype = 85 
+ORDER  BY 1, 
+          2, 
+          3 
+WITH UR;
+
+
+BI Template files:
+------------------
+
+SELECT A.objectvalue1, 
+       FD.fileid, 
+       FD.userfilename, 
+       FD.objectownerid, 
+       (SELECT X.xlatlongname 
+        FROM   psxlatitem X 
+        WHERE  X.fieldname = 'OBJECTOWNERID' 
+               AND X.fieldvalue = FD.objectownerid 
+               AND X.eff_status = 'A' 
+               AND ( X.effdt IS NULL 
+                      OR ( X.effdt = (SELECT Max(X1.effdt) 
+                                      FROM   psxlatitem X1 
+                                      WHERE  X.fieldname = X1.fieldname 
+                                             AND X.fieldvalue = X1.fieldvalue 
+                                             AND X.effdt <= CURRENT DATE) ) )), 
+       FD.lastupddttm, 
+       FD.lastupdoprid, 
+       B.tmpldefn_id, 
+       B.effdt, 
+       B.tmplfile_status, 
+       B.template_fileid, 
+       CASE 
+         WHEN A.sourcestatus = 0 THEN 'Unknown' 
+         WHEN A.sourcestatus = 1 THEN 'Absent' 
+         WHEN A.sourcestatus = 2 THEN 'Changed' 
+         WHEN A.sourcestatus = 3 THEN 'Unchanged' 
+         WHEN A.sourcestatus = 4 THEN 'Custom Changed' 
+         WHEN A.sourcestatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.sourcestatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END "Source Status", 
+       CASE 
+         WHEN A.targetstatus = 0 THEN 'Unknown' 
+         WHEN A.targetstatus = 1 THEN 'Absent' 
+         WHEN A.targetstatus = 2 THEN 'Changed' 
+         WHEN A.targetstatus = 3 THEN 'Unchanged' 
+         WHEN A.targetstatus = 4 THEN 'Custom Changed' 
+         WHEN A.targetstatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.targetstatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END "Target Status" 
+FROM   psprojectitem A 
+       LEFT OUTER JOIN psfiledefn FD 
+                    ON A.objectvalue1 = FD.fileid 
+       LEFT OUTER JOIN psxptmplfiledef B 
+                    ON FD.fileid = B.template_fileid 
+WHERE  A.projectname = 'xxxxxxxxxxxxxxxxxx' 
+       AND A.objecttype = 87 
+ORDER  BY 1, 
+          2, 
+          3 
+WITH UR; 
+
+
+++++++++++++++++++++++++++++++++++++++++
+Archieve Templates:
+
+
+SELECT A.objectvalue1, 
+       FD.psarch_id, 
+       FD.descr, 
+       DATE (FD.lastupddttm) "Last Updated", 
+       FD.lastupdoprid       "Last Updated By", 
+       FD.objectownerid, 
+       (SELECT X.xlatlongname 
+        FROM   psxlatitem X 
+        WHERE  X.fieldname = 'OBJECTOWNERID' 
+               AND X.fieldvalue = FD.objectownerid 
+               AND X.eff_status = 'A' 
+               AND ( X.effdt IS NULL 
+                      OR ( X.effdt = (SELECT Max(X1.effdt) 
+                                      FROM   psxlatitem X1 
+                                      WHERE  X.fieldname = X1.fieldname 
+                                             AND X.fieldvalue = X1.fieldvalue 
+                                             AND X.effdt <= CURRENT DATE) ) )), 
+       CASE 
+         WHEN A.sourcestatus = 0 THEN 'Unknown' 
+         WHEN A.sourcestatus = 1 THEN 'Absent' 
+         WHEN A.sourcestatus = 2 THEN 'Changed' 
+         WHEN A.sourcestatus = 3 THEN 'Unchanged' 
+         WHEN A.sourcestatus = 4 THEN 'Custom Changed' 
+         WHEN A.sourcestatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.sourcestatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END                   "Source Status", 
+       CASE 
+         WHEN A.targetstatus = 0 THEN 'Unknown' 
+         WHEN A.targetstatus = 1 THEN 'Absent' 
+         WHEN A.targetstatus = 2 THEN 'Changed' 
+         WHEN A.targetstatus = 3 THEN 'Unchanged' 
+         WHEN A.targetstatus = 4 THEN 'Custom Changed' 
+         WHEN A.targetstatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.targetstatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END                   "Target Status" 
+FROM   psprojectitem A 
+       LEFT OUTER JOIN psarchtemplate FD 
+                    ON A.objectvalue1 = FD.psarch_id 
+WHERE  A.projectname = 'xxxxxxxxxxxxxxxxxx' 
+       AND A.objecttype = 71 
+ORDER  BY 1, 
+          2 
+WITH UR;
+
+
+++++++++++++++++++++++
+
+File layouts
+
+SELECT A.objectvalue1, 
+       FD.flddefnname, 
+       FD.descr, 
+       DATE (FD.lastupddttm) "Last Updated", 
+       FD.lastupdoprid "Last Updated by", 
+       FD.descrlong, 
+       CASE 
+         WHEN A.sourcestatus = 0 THEN 'Unknown' 
+         WHEN A.sourcestatus = 1 THEN 'Absent' 
+         WHEN A.sourcestatus = 2 THEN 'Changed' 
+         WHEN A.sourcestatus = 3 THEN 'Unchanged' 
+         WHEN A.sourcestatus = 4 THEN 'Custom Changed' 
+         WHEN A.sourcestatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.sourcestatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END "Source Status", 
+       CASE 
+         WHEN A.targetstatus = 0 THEN 'Unknown' 
+         WHEN A.targetstatus = 1 THEN 'Absent' 
+         WHEN A.targetstatus = 2 THEN 'Changed' 
+         WHEN A.targetstatus = 3 THEN 'Unchanged' 
+         WHEN A.targetstatus = 4 THEN 'Custom Changed' 
+         WHEN A.targetstatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.targetstatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END "Target Status" 
+FROM   psprojectitem A 
+       LEFT OUTER JOIN psflddefn FD 
+                    ON A.objectvalue1 = FD.flddefnname 
+WHERE  A.projectname = 'xxxxxxxxxxxxxxxxxx' 
+       AND A.objecttype = 31 
+ORDER  BY 1, 
+          2 
+WITH UR; 
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 
  Other Miscellaneous items
 
 
