@@ -1,3 +1,1494 @@
+SQL for Process Chnages with Navigation details:
++++++++++++++++++++++++++++++++++++++++++++++++
+WITH processdef 
+     AS (SELECT P.prcsname, 
+                Z.menuname, 
+                Z.componentname, 
+                Z.market, 
+                Z.LABEL, 
+                Z.objectownerid, 
+                (SELECT X.xlatlongname 
+                 FROM   psxlatitem X 
+                 WHERE  X.fieldname = 'OBJECTOWNERID' 
+                        AND X.fieldvalue = Z.objectownerid 
+                        AND X.eff_status = 'A' 
+                        AND ( X.effdt IS NULL 
+                               OR ( X.effdt = (SELECT Max(X1.effdt) 
+                                               FROM   psxlatitem X1 
+                                               WHERE  X.fieldname = X1.fieldname 
+                                                      AND X.fieldvalue = 
+                                                          X1.fieldvalue 
+                                                      AND X.effdt <= CURRENT 
+                                                          DATE) ) 
+                            )), 
+                Z.portal_navpath, 
+                Z.hylerlink 
+         FROM   (SELECT Y.menuname, 
+                        Y.componentname, 
+                        Y.market, 
+                        Y.portal_label            AS LABEL, 
+                        Y.portal_product          AS OBJECTOWNERID, 
+                        To_char(E.portal_navpath) AS PORTAL_NAVPATH, 
+                        (SELECT Rtrim(A.uri_text) 
+                                || Rtrim (B.portal_name) 
+                                || '/ERP/' 
+                         FROM   psnodeuritext A, 
+                                psmsgnodedefn B 
+                         WHERE  B.localdefaultflg = 'Y' 
+                                AND A.msgnodename = B.msgnodename 
+                                AND A.uri_type = 'PL') 
+                        || Y.portal_urltext       AS HYLERLINK 
+                 FROM   (SELECT X.*, 
+                                D.portal_name, 
+                                D.portal_reftype, 
+                                D.portal_objname, 
+                                D.portal_prntobjname, 
+                                D.portal_label, 
+                                D.portal_product, 
+                                D.portal_urltext 
+                         FROM   (SELECT DISTINCT B.menuname, 
+                                                 C.pnlgrpname AS COMPONENTNAME, 
+                                                 C.market 
+                                 FROM   psauthitem B, 
+                                        psmenuitem C 
+                                 WHERE  B.menuname = C.menuname 
+                                        AND B.barname = C.barname 
+                                        AND B.baritemname = C.itemname) X 
+                                LEFT OUTER JOIN psprsmdefn D 
+                                             ON X.menuname = D.portal_uri_seg1 
+                                                AND 
+                                X.componentname = D.portal_uri_seg2 
+                                                AND X.market = D.portal_uri_seg3 
+                                                AND D.portal_name = 'EMPLOYEE' 
+                                                AND D.portal_linkobjname = ' ') 
+                        Y 
+                        LEFT OUTER JOIN psprsmnavinfo E 
+                                     ON Y.portal_name = E.portal_name 
+                                        AND Y.portal_reftype = E.portal_reftype 
+                                        AND Y.portal_objname = E.portal_objname) 
+                Z, 
+                ps_prcsdefnpnl P 
+         WHERE  Z.componentname = P.pnlgrpname) 
+SELECT A.objectvalue1, 
+       A.objectvalue2, 
+       CASE 
+         WHEN A.sourcestatus = 0 THEN 'Unknown' 
+         WHEN A.sourcestatus = 1 THEN 'Absent' 
+         WHEN A.sourcestatus = 2 THEN 'Changed' 
+         WHEN A.sourcestatus = 3 THEN 'Unchanged' 
+         WHEN A.sourcestatus = 4 THEN 'Custom Changed' 
+         WHEN A.sourcestatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.sourcestatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END "Source Status", 
+       CASE 
+         WHEN A.targetstatus = 0 THEN 'Unknown' 
+         WHEN A.targetstatus = 1 THEN 'Absent' 
+         WHEN A.targetstatus = 2 THEN 'Changed' 
+         WHEN A.targetstatus = 3 THEN 'Unchanged' 
+         WHEN A.targetstatus = 4 THEN 'Custom Changed' 
+         WHEN A.targetstatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.targetstatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END "Target Status", 
+       J.* 
+FROM   psprojectitem A 
+       LEFT OUTER JOIN processdef J 
+                    ON A.objectvalue2 = J.prcsname 
+WHERE  A.projectname IN ( 'XXXXXXXXXXXXXX' ) 
+       AND A.objecttype = 20 
+WITH UR; 
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+SQL for AppEngine changes
++++++++++++++++++++++++++++
+
+SELECT A.objectid1, 
+       A.objectvalue1, 
+       A.objectid2, 
+       A.objectvalue2, 
+       A.objectvalue4, 
+       B.ae_applid, 
+       B.descr, 
+       B.lastupdoprid, 
+       B.lastupddttm, 
+       B.objectownerid, 
+       (SELECT X.xlatlongname 
+        FROM   psxlatitem X 
+        WHERE  X.fieldname = 'OBJECTOWNERID' 
+               AND X.fieldvalue = B.objectownerid 
+               AND X.eff_status = 'A' 
+               AND ( X.effdt IS NULL 
+                      OR ( X.effdt = (SELECT Max(X1.effdt) 
+                                      FROM   psxlatitem X1 
+                                      WHERE  X.fieldname = X1.fieldname 
+                                             AND X.fieldvalue = X1.fieldvalue 
+                                             AND X.effdt <= CURRENT DATE) ) )), 
+       B.descrlong, 
+       A.sourcestatus, 
+       CASE 
+         WHEN A.sourcestatus = 0 THEN 'Unknown' 
+         WHEN A.sourcestatus = 1 THEN 'Absent' 
+         WHEN A.sourcestatus = 2 THEN 'Changed' 
+         WHEN A.sourcestatus = 3 THEN 'Unchanged' 
+         WHEN A.sourcestatus = 4 THEN 'Custom Changed' 
+         WHEN A.sourcestatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.sourcestatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END "Source Status", 
+       A.targetstatus, 
+       CASE 
+         WHEN A.targetstatus = 0 THEN 'Unknown' 
+         WHEN A.targetstatus = 1 THEN 'Absent' 
+         WHEN A.targetstatus = 2 THEN 'Changed' 
+         WHEN A.targetstatus = 3 THEN 'Unchanged' 
+         WHEN A.targetstatus = 4 THEN 'Custom Changed' 
+         WHEN A.targetstatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.targetstatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END "Target Status" 
+FROM   psprojectitem A 
+       LEFT OUTER JOIN psaeappldefn B 
+                    ON A.objectvalue1 = B.ae_applid 
+WHERE  A.projectname IN ( 'XXXXXXXXXXXXXX' ) 
+       AND A.objecttype = 33 
+       AND A.objectid1 = 66 
+ORDER  BY A.objectid1, 
+          A.objectid2, 
+          A.objectid3, 
+          A.objectid4 
+WITH UR;
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+SQL for AppEngine section changes:
+
+SELECT A.objectvalue1, 
+       A.objectvalue2, 
+       A.objectvalue4, 
+       ASE.ae_applid, 
+       ASE.ae_section, 
+       ASE.ae_section_type, 
+       CASE 
+         WHEN ASE.ae_section_type = 'C' THEN 'Critical Database Updates' 
+         WHEN ASE.ae_section_type = 'P' THEN 'Preparation Only' 
+         ELSE '' 
+       END "Section Type", 
+       ASD.dbtype, 
+       CASE 
+         WHEN ASD.dbtype = '0' THEN 'SQLBase' 
+         WHEN ASD.dbtype = '1' THEN 'DB2' 
+         WHEN ASD.dbtype = '2' THEN 'Oracle' 
+         WHEN ASD.dbtype = '3' THEN 'Informix' 
+         WHEN ASD.dbtype = '4' THEN 'DB2/UNIX' 
+         WHEN ASD.dbtype = '5' THEN 'AllBase' 
+         WHEN ASD.dbtype = '6' THEN 'Sybase' 
+         WHEN ASD.dbtype = '7' THEN 'Microsoft' 
+         WHEN ASD.dbtype = '8' THEN 'DB2/400' 
+         ELSE '' 
+       END "DB Type", 
+       ASD.eff_status, 
+       ASD.descr, 
+       ASD.ae_auto_commit, 
+       ASD.descrlong, 
+       CASE 
+         WHEN A.sourcestatus = 0 THEN 'Unknown' 
+         WHEN A.sourcestatus = 1 THEN 'Absent' 
+         WHEN A.sourcestatus = 2 THEN 'Changed' 
+         WHEN A.sourcestatus = 3 THEN 'Unchanged' 
+         WHEN A.sourcestatus = 4 THEN 'Custom Changed' 
+         WHEN A.sourcestatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.sourcestatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END "Source Status", 
+       CASE 
+         WHEN A.targetstatus = 0 THEN 'Unknown' 
+         WHEN A.targetstatus = 1 THEN 'Absent' 
+         WHEN A.targetstatus = 2 THEN 'Changed' 
+         WHEN A.targetstatus = 3 THEN 'Unchanged' 
+         WHEN A.targetstatus = 4 THEN 'Custom Changed' 
+         WHEN A.targetstatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.targetstatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END "Target Status" 
+FROM   psprojectitem A 
+       LEFT OUTER JOIN psaesectdefn ASE 
+                    ON A.objectvalue1 = ASE.ae_applid 
+                       AND A.objectvalue2 = ASE.ae_section 
+       LEFT OUTER JOIN psaesectdtldefn ASD 
+                    ON ASE.ae_applid = ASD.ae_applid 
+                       AND ASE.ae_section = ASD.ae_section 
+WHERE  A.projectname IN ( 'XXXXXXXXXXXXXX' ) 
+       AND A.objecttype = 34 
+       AND A.objectid1 = 66 
+       AND ASD.effdt = (SELECT Max(B_ED.effdt) 
+                        FROM   psaesectdtldefn B_ED 
+                        WHERE  ASD.ae_applid = B_ED.ae_applid 
+                               AND ASD.ae_section = B_ED.ae_section 
+                               AND ASD.market = B_ED.market 
+                               AND ASD.dbtype = B_ED.dbtype 
+                               AND B_ED.effdt <= CURRENT DATE) 
+ORDER  BY 1, 
+          2 
+WITH UR; 
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+SQL for AppEngie pc changes
+
+ SELECT 
+ A.OBJECTVALUE1,
+ A.OBJECTVALUE2,
+ A.OBJECTVALUE3,
+ A.OBJECTVALUE4,
+ TRIM(B.OBJECTVALUE1) ||'.'||TRIM(B.OBJECTVALUE2)||'.'||TRIM(B.OBJECTVALUE6) ||'.'||TRIM(B.OBJECTVALUE7) AS AppEngine, B.PROGSEQ, B.PCTEXT,
+ CASE
+ WHEN A.SOURCESTATUS = 0 THEN 'Unknown'
+ WHEN A.SOURCESTATUS = 1 THEN 'Absent'
+ WHEN A.SOURCESTATUS = 2 THEN 'Changed'
+ WHEN A.SOURCESTATUS = 3 THEN 'Unchanged'
+ WHEN A.SOURCESTATUS = 4 THEN 'Custom Changed'
+ WHEN A.SOURCESTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.SOURCESTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Source Status",
+ CASE
+ WHEN A.TARGETSTATUS = 0 THEN 'Unknown'
+ WHEN A.TARGETSTATUS = 1 THEN 'Absent'
+ WHEN A.TARGETSTATUS = 2 THEN 'Changed'
+ WHEN A.TARGETSTATUS = 3 THEN 'Unchanged'
+ WHEN A.TARGETSTATUS = 4 THEN 'Custom Changed'
+ WHEN A.TARGETSTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.TARGETSTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Target Status"
+ FROM PSPROJECTITEM A , PSPCMTXT B
+ WHERE A.PROJECTNAME IN ('XXXXXXXXXXXXXX')
+ and A.OBJECTTYPE = 43 and A.OBJECTID1 = 66 and A.OBJECTID2 = 77 and A.OBJECTID3 = 78 AND A.OBJECTID4 = 12 
+ AND A.OBJECTVALUE1 = B.OBJECTVALUE1 AND TRIM(SUBSTR(A.OBJECTVALUE2,1,8)) = trim(B.OBJECTVALUE2) AND TRIM(A.OBJECTVALUE3) = TRIM(B.OBJECTVALUE6) AND TRIM(A.OBJECTVALUE4) = TRIM(B.OBJECTVALUE7)
+ AND B.OBJECTID1 = A.OBJECTID1 and B.OBJECTID2 = A.OBJECTID2 and B.OBJECTID6 = A.OBJECTID3 AND B.OBJECTID7 = A.OBJECTID4
+ ORDER BY  1,2,3,4
+ WITH UR;
+ 
+ ++++++++++++++++++++++++++++++++++++++++++++++++++
+  SQL for AE SQL chnages
+ 
+ SELECT TRIM(Substr(B.SQLID, 1, 12)) AS AppEngine, 
+       TRIM(Substr(B.SQLID, 13, 8)) AS AE_Section, 
+       TRIM(Substr(B.SQLID, 21, 8)) AS AE_Step, 
+       TRIM(Substr(B.SQLID, 29, 1)) AS Action_SQL, 
+       CASE 
+         WHEN TRIM(Substr(B.SQLID, 29, 1)) = 'H' THEN 'Do When' 
+         WHEN TRIM(Substr(B.SQLID, 29, 1)) = 'D' THEN 'Do Select' 
+         WHEN TRIM(Substr(B.SQLID, 29, 1)) = 'W' THEN 'Do While' 
+         WHEN TRIM(Substr(B.SQLID, 29, 1)) = 'S' THEN 'SQL' 
+         ELSE '' 
+       END                          "Action SQL", 
+       B.SQLID, 
+       CASE 
+         WHEN B.dbtype = '0' THEN 'SQLBase' 
+         WHEN B.dbtype = '1' THEN 'DB2' 
+         WHEN B.dbtype = '2' THEN 'Oracle' 
+         WHEN B.dbtype = '3' THEN 'Informix' 
+         WHEN B.dbtype = '4' THEN 'DB2/UNIX' 
+         WHEN B.dbtype = '5' THEN 'AllBase' 
+         WHEN B.dbtype = '6' THEN 'Sybase' 
+         WHEN B.dbtype = '7' THEN 'Microsoft' 
+         WHEN B.dbtype = '8' THEN 'DB2/400' 
+         ELSE '' 
+       END                          "DBType", 
+       CASE 
+         WHEN A.sourcestatus = 0 THEN 'Unknown' 
+         WHEN A.sourcestatus = 1 THEN 'Absent' 
+         WHEN A.sourcestatus = 2 THEN 'Changed' 
+         WHEN A.sourcestatus = 3 THEN 'Unchanged' 
+         WHEN A.sourcestatus = 4 THEN 'Custom Changed' 
+         WHEN A.sourcestatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.sourcestatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END                          "Source Status", 
+       CASE 
+         WHEN A.targetstatus = 0 THEN 'Unknown' 
+         WHEN A.targetstatus = 1 THEN 'Absent' 
+         WHEN A.targetstatus = 2 THEN 'Changed' 
+         WHEN A.targetstatus = 3 THEN 'Unchanged' 
+         WHEN A.targetstatus = 4 THEN 'Custom Changed' 
+         WHEN A.targetstatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.targetstatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END                          "Target Status", 
+       B.sqltext 
+FROM   psprojectitem A, 
+       pssqltextdefn B 
+WHERE  A.projectname IN ( 'XXXXXXXXXXXXXX' ) 
+       AND A.objecttype = 30 
+       AND A.objectid1 = 65 
+       AND A.objectid2 = 81 
+       AND A.objectid3 = 0 
+       AND A.objectid4 = 0 
+       AND A.objectvalue2 = 1 
+       AND A.objectvalue1 = B.SQLID 
+ORDER  BY 1,2,3,4
+WITH UR;
+
++++++++++++++++++++++++++++++++++++++++++++++
+SQL for Component changes with Navigation details:
+
+WITH portalnav 
+     AS (SELECT D.portal_name, 
+                D.portal_reftype, 
+                D.portal_objname, 
+                D.portal_uri_seg1, 
+                D.portal_uri_seg2, 
+                N.portal_navpath 
+         FROM   psprsmdefn D, 
+                psprsmnavinfo N 
+         WHERE  D.portal_name = N.portal_name 
+                AND D.portal_reftype = N.portal_reftype 
+                AND D.portal_objname = N.portal_objname) 
+SELECT A.objectvalue1                          AS Component, 
+       MEN.menuname                           AS "Menu Name", 
+       CASE C.dfltsrchtype 
+         WHEN 0 THEN 'BASIC SEARCH *ERROR*' 
+         WHEN 1 THEN 'ADVANCED SEARCH' 
+         ELSE To_char(C.dfltsrchtype) 
+       END                                    AS SEARCH_TYPE, 
+       Decode (Bitand(tbarbtns, 1), 1, 'Y', 
+                                    ' ')      "save", 
+       Decode (Bitand(tbarbtns, 2), 2, 'Y', 
+                                    ' ')      "return to list", 
+       Decode (Bitand(tbarbtns, 4), 4, 'Y', 
+                                    ' ')      "next page in component", 
+       Decode (Bitand(tbarbtns, 8), 8, 'Y', 
+                                    ' ')      "previous page in component", 
+       Decode (Bitand(tbarbtns, 16), 16, 'Y', 
+                                     ' ')     "add", 
+       Decode (Bitand(tbarbtns, 32), 32, 'Y', 
+                                     ' ')     "update/display", 
+       Decode (Bitand(tbarbtns, 64), 64, 'Y', 
+                                     ' ')     "update/display all", 
+       Decode (Bitand(tbarbtns, 128), 128, 'Y', 
+                                      ' ')    "correction", 
+       Decode (Bitand(tbarbtns, 256), 256, 'Y', 
+                                      ' ')    "next in list", 
+       Decode (Bitand(tbarbtns, 512), 512, 'Y', 
+                                      ' ')    "previous in list", 
+       Decode (Bitand(tbarbtns, 1024), 1024, 'Y', 
+                                       ' ')   "?", 
+       Decode (Bitand(tbarbtns, 2048), 2048, 'Y', 
+                                       ' ')   "refresh", 
+       Decode (Bitand(tbarbtns, 4096), 4096, 'Y', 
+                                       ' ')   "view worklist", 
+       Decode (Bitand(tbarbtns, 8192), 8192, 'Y', 
+                                       ' ')   "next in worklist", 
+       Decode (Bitand(tbarbtns, 16384), 16384, 'Y', 
+                                        ' ')  "previous in worklist", 
+       Decode (Bitand(tbarbtns, 32768), 32768, 'Y', 
+                                        ' ')  "notify", 
+       Decode (Bitand(tbarbtns, 65536), 65536, 'Y', 
+                                        ' ')  "cancel", 
+       Decode (Bitand(tbarbtns, 131072), 131072, 'Y', 
+                                         ' ') "spell check", 
+       CASE pnlnavflags 
+         WHEN 0 THEN 'MULTI-PAGE NAV OFF' 
+         WHEN 1 THEN 'FOLDERS (TOP)' 
+         WHEN 2 THEN 'HYPERLINKS (BOTTOM)' 
+         WHEN 3 THEN 'FOLDER + LINKS NAV ON' 
+         ELSE To_char(pnlnavflags) 
+       END                                    AS NAVIGATION_TYPE, 
+       Decode(Bitand(showtbar, 1), 1, 'N', 
+                                   'Y')       AS DISABLE_TOOLBAR, 
+       Decode(Bitand(showtbar, 2), 2, 'Y', 
+                                   'N')       AS DISABLE_PAGEBAR, 
+       Decode(Bitand(showtbar, 4), 4, 'N', 
+                                   'Y')       AS SHOW_HELP_URL, 
+       Decode(Bitand(showtbar, 8), 8, 'N', 
+                                   'Y')       AS SHOW_COPY_URL, 
+       Decode(Bitand(showtbar, 16), 16, 'N', 
+                                    'Y')      AS SHOW_NEW_WIN, 
+       Decode(Bitand(showtbar, 32), 32, 'N', 
+                                    'Y')      AS SHOW_CUSTOMIZE_PAGE, 
+       (SELECT X.xlatlongname 
+        FROM   psxlatitem X 
+        WHERE  X.fieldname = 'OBJECTOWNERID' 
+               AND X.fieldvalue = C.objectownerid 
+               AND X.eff_status = 'A' 
+               AND ( X.effdt IS NULL 
+                      OR ( X.effdt = (SELECT Max(X1.effdt) 
+                                      FROM   psxlatitem X1 
+                                      WHERE  X.fieldname = X1.fieldname 
+                                             AND X.fieldvalue = X1.fieldvalue 
+                                             AND X.effdt <= CURRENT DATE) ) )), 
+       CASE C.fluidmode 
+         WHEN 1 THEN 'Yes' 
+         ELSE 'No' 
+       END                                    AS "Fluid", 
+       NAV.portal_navpath                     AS "Navigation Path", 
+       CASE 
+         WHEN A.sourcestatus = 0 THEN 'Unknown' 
+         WHEN A.sourcestatus = 1 THEN 'Absent' 
+         WHEN A.sourcestatus = 2 THEN 'Changed' 
+         WHEN A.sourcestatus = 3 THEN 'Unchanged' 
+         WHEN A.sourcestatus = 4 THEN 'Custom Changed' 
+         WHEN A.sourcestatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.sourcestatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END                                    "Source Status", 
+       CASE 
+         WHEN A.targetstatus = 0 THEN 'Unknown' 
+         WHEN A.targetstatus = 1 THEN 'Absent' 
+         WHEN A.targetstatus = 2 THEN 'Changed' 
+         WHEN A.targetstatus = 3 THEN 'Unchanged' 
+         WHEN A.targetstatus = 4 THEN 'Custom Changed' 
+         WHEN A.targetstatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.targetstatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END                                    "Target Status", 
+       descrlong 
+FROM   psprojectitem A 
+       LEFT OUTER JOIN pspnlgrpdefn C 
+                    ON A.objectvalue1 = C.pnlgrpname  
+                       AND A.objectvalue2 = C.market
+       LEFT OUTER JOIN psmenuitem MEN 
+                    ON C.pnlgrpname = MEN.pnlgrpname 
+       LEFT OUTER JOIN portalnav NAV 
+                    ON NAV.portal_uri_seg1 = MEN.menuname 
+                       AND NAV.portal_uri_seg2 = C.pnlgrpname 
+WHERE  A.projectname = 'XXXXXXXXXXXXXX' 
+       AND A.objecttype = 7
+ORDER  BY 1, 
+          2; 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+SQL for Component PC Changes:
+
+SELECT 
+ A.OBJECTID1,
+ trim(A.OBJECTVALUE1),
+ A.OBJECTID2,
+ trim(A.OBJECTVALUE2),
+A.OBJECTID3,
+ trim(A.OBJECTVALUE3),
+A.OBJECTID4,
+ trim(A.OBJECTVALUE4),
+ TRIM(B.OBJECTVALUE1) ||'.'||TRIM(B.OBJECTVALUE2)||'.'||TRIM(B.OBJECTVALUE3)  AS ComponentPeopleCode, B.PROGSEQ, B.PCTEXT,
+ A.SOURCESTATUS,
+ CASE
+ WHEN A.SOURCESTATUS = 0 THEN 'Unknown'
+ WHEN A.SOURCESTATUS = 1 THEN 'Absent'
+ WHEN A.SOURCESTATUS = 2 THEN 'Changed'
+ WHEN A.SOURCESTATUS = 3 THEN 'Unchanged'
+ WHEN A.SOURCESTATUS = 4 THEN 'Custom Changed'
+ WHEN A.SOURCESTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.SOURCESTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Source Status",
+ A.TARGETSTATUS,
+ CASE
+ WHEN A.TARGETSTATUS = 0 THEN 'Unknown'
+ WHEN A.TARGETSTATUS = 1 THEN 'Absent'
+ WHEN A.TARGETSTATUS = 2 THEN 'Changed'
+ WHEN A.TARGETSTATUS = 3 THEN 'Unchanged'
+ WHEN A.TARGETSTATUS = 4 THEN 'Custom Changed'
+ WHEN A.TARGETSTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.TARGETSTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Target Status",
+ A.UPGRADEACTION,
+ CASE
+ WHEN A.UPGRADEACTION = 0 THEN 'Copy'
+ WHEN A.UPGRADEACTION = 1 THEN 'DELETE'
+ WHEN A.UPGRADEACTION = 2 THEN 'None'
+ WHEN A.UPGRADEACTION = 3 THEN 'CopyProp'
+ ELSE 'Unknown'
+ END "Upgrade Action"
+ FROM PSPROJECTITEM A LEFT OUTER JOIN PSPCMTXT B
+ ON A.OBJECTVALUE1 = B.OBJECTVALUE1 AND A.OBJECTVALUE2 = B.OBJECTVALUE2 AND A.OBJECTVALUE3 = B.OBJECTVALUE3   
+ WHERE A.PROJECTNAME IN ('XXXXXXXXXXXXXX')
+ and A.OBJECTTYPE = 46 and A.OBJECTID1 = 10 and A.OBJECTID2 = 39  and A.OBJECTID3 = 12
+ ORDER BY  A.OBJECTTYPE,
+ A.OBJECTID1,
+ A.OBJECTID2,
+ A.OBJECTID3,
+ A.OBJECTID4
+ WITH UR;
+
++++++++++++++++++++++++++++++++++++++++++
+SQL for Component Record PC Changes:
+
+SELECT 
+ A.OBJECTID1,
+ trim(A.OBJECTVALUE1),
+ A.OBJECTID2,
+ trim(A.OBJECTVALUE2),
+A.OBJECTID3,
+ trim(A.OBJECTVALUE3),
+A.OBJECTID4,
+ trim(A.OBJECTVALUE4),
+ TRIM(B.OBJECTVALUE1) ||'.'||TRIM(B.OBJECTVALUE2)||'.'||TRIM(B.OBJECTVALUE3)||'.'||trim(A.OBJECTVALUE4)  AS ComponentRecordPeopleCode, B.PROGSEQ, B.PCTEXT,
+ A.SOURCESTATUS,
+ CASE
+ WHEN A.SOURCESTATUS = 0 THEN 'Unknown'
+ WHEN A.SOURCESTATUS = 1 THEN 'Absent'
+ WHEN A.SOURCESTATUS = 2 THEN 'Changed'
+ WHEN A.SOURCESTATUS = 3 THEN 'Unchanged'
+ WHEN A.SOURCESTATUS = 4 THEN 'Custom Changed'
+ WHEN A.SOURCESTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.SOURCESTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Source Status",
+ A.TARGETSTATUS,
+ CASE
+ WHEN A.TARGETSTATUS = 0 THEN 'Unknown'
+ WHEN A.TARGETSTATUS = 1 THEN 'Absent'
+ WHEN A.TARGETSTATUS = 2 THEN 'Changed'
+ WHEN A.TARGETSTATUS = 3 THEN 'Unchanged'
+ WHEN A.TARGETSTATUS = 4 THEN 'Custom Changed'
+ WHEN A.TARGETSTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.TARGETSTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Target Status",
+ A.UPGRADEACTION,
+ CASE
+ WHEN A.UPGRADEACTION = 0 THEN 'Copy'
+ WHEN A.UPGRADEACTION = 1 THEN 'DELETE'
+ WHEN A.UPGRADEACTION = 2 THEN 'None'
+ WHEN A.UPGRADEACTION = 3 THEN 'CopyProp'
+ ELSE 'Unknown'
+ END "Upgrade Action"
+ FROM PSPROJECTITEM A LEFT OUTER JOIN PSPCMTXT B
+ON A.OBJECTVALUE1 = B.OBJECTVALUE1 AND A.OBJECTVALUE2 = B.OBJECTVALUE2 AND A.OBJECTVALUE3 = B.OBJECTVALUE3 AND A.OBJECTVALUE4 = B.OBJECTVALUE4 
+ WHERE A.PROJECTNAME IN ('XXXXXXXXXXXXXX')
+ and A.OBJECTTYPE = 47 and A.OBJECTID1 = 10 and A.OBJECTID2 = 39  and A.OBJECTID3 = 1 and A.OBJECTID4 = 12
+ ORDER BY  A.OBJECTTYPE,
+ A.OBJECTID1,
+ A.OBJECTID2,
+ A.OBJECTID3,
+ A.OBJECTID4
+ WITH UR; 
+
+++++++++++++++++++++++++++++++++++++++++++
+
+SQL for Component Record Field PC Changes:
+
+SELECT 
+ A.OBJECTID1,
+ trim(A.OBJECTVALUE1),
+ A.OBJECTID2,
+ trim(A.OBJECTVALUE2),
+A.OBJECTID3,
+ trim(A.OBJECTVALUE3),
+A.OBJECTID4,
+ trim(A.OBJECTVALUE4),
+  trim(B.OBJECTVALUE4),
+   trim(B.OBJECTVALUE5),
+ TRIM(B.OBJECTVALUE1) ||'.'||TRIM(B.OBJECTVALUE2)||'.'||TRIM(B.OBJECTVALUE3)||'.'||TRIM(B.OBJECTVALUE4)||'.'||TRIM(B.OBJECTVALUE5)  AS CompRecFldPC, B.PROGSEQ, B.PCTEXT,
+ A.SOURCESTATUS,
+ CASE
+ WHEN A.SOURCESTATUS = 0 THEN 'Unknown'
+ WHEN A.SOURCESTATUS = 1 THEN 'Absent'
+ WHEN A.SOURCESTATUS = 2 THEN 'Changed'
+ WHEN A.SOURCESTATUS = 3 THEN 'Unchanged'
+ WHEN A.SOURCESTATUS = 4 THEN 'Custom Changed'
+ WHEN A.SOURCESTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.SOURCESTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Source Status",
+ A.TARGETSTATUS,
+ CASE
+ WHEN A.TARGETSTATUS = 0 THEN 'Unknown'
+ WHEN A.TARGETSTATUS = 1 THEN 'Absent'
+ WHEN A.TARGETSTATUS = 2 THEN 'Changed'
+ WHEN A.TARGETSTATUS = 3 THEN 'Unchanged'
+ WHEN A.TARGETSTATUS = 4 THEN 'Custom Changed'
+ WHEN A.TARGETSTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.TARGETSTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Target Status"
+ FROM PSPROJECTITEM A LEFT OUTER JOIN  PSPCMTXT B
+ON A.OBJECTVALUE1 = B.OBJECTVALUE1 AND A.OBJECTVALUE2 = B.OBJECTVALUE2 AND A.OBJECTVALUE3 = B.OBJECTVALUE3 
+ AND trim(substr(A.OBJECTVALUE4,1,18)) = trim(B.OBJECTVALUE4)
+ and  trim(substr(A.OBJECTVALUE4,19,LENGTH(A.OBJECTVALUE4)-18)) =  trim(B.OBJECTVALUE5)  
+ WHERE A.PROJECTNAME IN ('XXXXXXXXXXXXXX')
+ and A.OBJECTTYPE = 48 and A.OBJECTID1 = 10 and A.OBJECTID2 = 39  and A.OBJECTID3 = 1 and A.OBJECTID4 = 2 
+ ORDER BY  A.OBJECTTYPE,
+ A.OBJECTID1,
+ A.OBJECTID2,
+ A.OBJECTID3,
+ A.OBJECTID4
+ WITH UR;
+
+ 
+ ++++++++++++++++++++++++++++++++++++++++
+ SQL for Page Changes:
+ 
+ SELECT A.objectvalue1      "Page Name", 
+       P.pnlname, 
+       CASE P.pnltype 
+         WHEN 0 THEN 'Page' 
+         WHEN 1 THEN 'Sub page' 
+         WHEN 2 THEN 'Secondary page' 
+         ELSE To_char (pnltype) 
+       END                 "Page Type", 
+       CASE 
+         WHEN Bitand(P.pnluse, 16384) = 16384 THEN 'Fluid' 
+         WHEN P.pnltype IS NULL THEN '' 
+         ELSE 'Classic' 
+       END                 "Fluid/Classic?", 
+       P.fieldcount, 
+       P.descr, 
+       DATE(P.lastupddttm) "Last Updated", 
+       P.lastupdoprid      "Last Updated By", 
+       P.objectownerid, 
+       (SELECT X.xlatlongname 
+        FROM   psxlatitem X 
+        WHERE  X.fieldname = 'OBJECTOWNERID' 
+               AND X.fieldvalue = P.objectownerid 
+               AND X.eff_status = 'A' 
+               AND ( X.effdt IS NULL 
+                      OR ( X.effdt = (SELECT Max(X1.effdt) 
+                                      FROM   psxlatitem X1 
+                                      WHERE  X.fieldname = X1.fieldname 
+                                             AND X.fieldvalue = X1.fieldvalue 
+                                             AND X.effdt <= CURRENT DATE) ) )), 
+       CASE 
+         WHEN A.sourcestatus = 0 THEN 'Unknown' 
+         WHEN A.sourcestatus = 1 THEN 'Absent' 
+         WHEN A.sourcestatus = 2 THEN 'Changed' 
+         WHEN A.sourcestatus = 3 THEN 'Unchanged' 
+         WHEN A.sourcestatus = 4 THEN 'Custom Changed' 
+         WHEN A.sourcestatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.sourcestatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END                 "Source Status", 
+       CASE 
+         WHEN A.targetstatus = 0 THEN 'Unknown' 
+         WHEN A.targetstatus = 1 THEN 'Absent' 
+         WHEN A.targetstatus = 2 THEN 'Changed' 
+         WHEN A.targetstatus = 3 THEN 'Unchanged' 
+         WHEN A.targetstatus = 4 THEN 'Custom Changed' 
+         WHEN A.targetstatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.targetstatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END                 "Target Status", 
+       P.descrlong 
+FROM   psprojectitem A 
+       LEFT OUTER JOIN pspnldefn P 
+                    ON A.objectvalue1 = P.pnlname 
+WHERE  A.projectname = 'XXXXXXXXXXXXXX' 
+       AND A.objecttype = 5 
+ORDER  BY 1; 
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+SQL for Page PC Changes
+
+SELECT 
+ A.OBJECTID1,
+ trim(A.OBJECTVALUE1),
+ A.OBJECTID2,
+ trim(A.OBJECTVALUE2),
+A.OBJECTID3,
+ trim(A.OBJECTVALUE3),
+A.OBJECTID4,
+ TRIM(B.OBJECTVALUE1) ||'.'||TRIM(B.OBJECTVALUE2)  AS PagePC, B.PROGSEQ, B.PCTEXT,
+ A.SOURCESTATUS,
+ CASE
+ WHEN A.SOURCESTATUS = 0 THEN 'Unknown'
+ WHEN A.SOURCESTATUS = 1 THEN 'Absent'
+ WHEN A.SOURCESTATUS = 2 THEN 'Changed'
+ WHEN A.SOURCESTATUS = 3 THEN 'Unchanged'
+ WHEN A.SOURCESTATUS = 4 THEN 'Custom Changed'
+ WHEN A.SOURCESTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.SOURCESTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Source Status",
+ A.TARGETSTATUS,
+ CASE
+ WHEN A.TARGETSTATUS = 0 THEN 'Unknown'
+ WHEN A.TARGETSTATUS = 1 THEN 'Absent'
+ WHEN A.TARGETSTATUS = 2 THEN 'Changed'
+ WHEN A.TARGETSTATUS = 3 THEN 'Unchanged'
+ WHEN A.TARGETSTATUS = 4 THEN 'Custom Changed'
+ WHEN A.TARGETSTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.TARGETSTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Target Status"
+ FROM PSPROJECTITEM A LEFT OUTER JOIN PSPCMTXT B
+ON A.OBJECTVALUE1 = B.OBJECTVALUE1 AND A.OBJECTVALUE2 = B.OBJECTVALUE2 
+ WHERE A.PROJECTNAME IN ('XXXXXXXXXXXXXX')
+ and A.OBJECTTYPE = 44 and A.OBJECTID1 = 9 and A.OBJECTID2 = 12  
+ ORDER BY  A.OBJECTTYPE,
+ A.OBJECTID1,
+ A.OBJECTID2,
+ A.OBJECTID3,
+ A.OBJECTID4
+ WITH UR;
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+-- Field Changes
+
+SELECT A.objectvalue1, 
+       A.objectid2, 
+       A.objectvalue2, 
+       F.fieldname, 
+       ( CASE 
+           WHEN F.fieldtype = 0 THEN F.fieldtype 
+                                     || ' = Character' 
+           WHEN F.fieldtype = 1 THEN F.fieldtype 
+                                     || ' = Long Character' 
+           WHEN F.fieldtype = 2 THEN F.fieldtype 
+                                     || ' = Number' 
+           WHEN F.fieldtype = 3 THEN F.fieldtype 
+                                     || ' = Signed Number' 
+           WHEN F.fieldtype = 4 THEN F.fieldtype 
+                                     || ' = Date' 
+           WHEN F.fieldtype = 5 THEN F.fieldtype 
+                                     || ' = Time' 
+           WHEN F.fieldtype = 6 THEN F.fieldtype 
+                                     || ' = DateTime' 
+           WHEN F.fieldtype = 8 THEN F.fieldtype 
+                                     || ' = Image OR Attachment' 
+           WHEN F.fieldtype = 9 THEN F.fieldtype 
+                                     || ' = ImageReference' 
+           ELSE 'Unknown' 
+         END ) AS FIELDTYPE, 
+       F.length, 
+       F.decimalpos, 
+       F.format, 
+       ( CASE 
+           WHEN F.format = 0 THEN 
+             CASE 
+               WHEN F.fieldtype = 0 THEN 'Upper' 
+               WHEN F.fieldtype = 6 THEN 'HH:MM' 
+               ELSE '' 
+             END 
+           WHEN F.format = 1 THEN 'Name' 
+           WHEN F.format = 2 THEN 'Phone Number(North American)' 
+           WHEN F.format = 3 THEN 'Zip/Postal Code(North American)' 
+           WHEN F.format = 4 THEN 'US Social Security Number' 
+           WHEN F.format = 5 THEN '-' 
+           WHEN F.format = 6 THEN 'Mixed Case' 
+           WHEN F.format = 7 THEN 'Raw/Binary' 
+           WHEN F.format = 8 THEN 'Numbers only' 
+           WHEN F.format = 9 THEN 'SIN ' 
+           WHEN F.format = 10 THEN 'International Phone Number' 
+           WHEN F.format = 11 THEN 'Zip/Postal Code International' 
+           WHEN F.format = 12 THEN 'Time HH:MM:SS' 
+           WHEN F.format = 13 THEN 'Time HH:MM:SS.999999' 
+           WHEN F.format = 14 THEN 'Custom' 
+           ELSE 'Unknown' 
+         END ) AS FIELDFORMAT, 
+       F.formatlength, 
+       F.image_fmt, 
+       F.formatfamily, 
+       F.dispfmtname, 
+       F.defcntryyr, 
+       F.imemode, 
+       F.kblayout, 
+       F.descrlong, 
+       F.lastupddttm, 
+       F.lastupdoprid, 
+       F.objectownerid, 
+       (SELECT X.xlatlongname 
+        FROM   psxlatitem X 
+        WHERE  X.fieldname = 'OBJECTOWNERID' 
+               AND X.fieldvalue = F.objectownerid 
+               AND X.eff_status = 'A' 
+               AND ( X.effdt IS NULL 
+                      OR ( X.effdt = (SELECT Max(X1.effdt) 
+                                      FROM   psxlatitem X1 
+                                      WHERE  X.fieldname = X1.fieldname 
+                                             AND X.fieldvalue = X1.fieldvalue 
+                                             AND X.effdt <= CURRENT DATE) ) )), 
+       A.sourcestatus, 
+       CASE 
+         WHEN A.sourcestatus = 0 THEN 'Unknown' 
+         WHEN A.sourcestatus = 1 THEN 'Absent' 
+         WHEN A.sourcestatus = 2 THEN 'Changed' 
+         WHEN A.sourcestatus = 3 THEN 'Unchanged' 
+         WHEN A.sourcestatus = 4 THEN 'Custom Changed' 
+         WHEN A.sourcestatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.sourcestatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END     "Source Status", 
+       A.targetstatus, 
+       CASE 
+         WHEN A.targetstatus = 0 THEN 'Unknown' 
+         WHEN A.targetstatus = 1 THEN 'Absent' 
+         WHEN A.targetstatus = 2 THEN 'Changed' 
+         WHEN A.targetstatus = 3 THEN 'Unchanged' 
+         WHEN A.targetstatus = 4 THEN 'Custom Changed' 
+         WHEN A.targetstatus = 5 THEN 'Custom Unchanged' 
+         WHEN A.targetstatus = 6 THEN 'Same' 
+         ELSE 'Unknown' 
+       END     "Target Status" 
+FROM   psprojectitem A 
+       LEFT OUTER JOIN psdbfield F 
+                    ON A.objectvalue1 = F.fieldname 
+WHERE  A.projectname IN ( 'XXXXXXXXXXXXXX' ) 
+       AND A.objecttype = 2 
+       AND A.objectid1 = 6 
+       AND A.objectid2 = 0 
+ORDER  BY A.objecttype, 
+          A.objectid1, 
+          A.objectid2, 
+          A.objectid3, 
+          A.objectid4 
+WITH UR; 
+
++++++++++++++++++++++++++++++++++++++
+Field Label Changes --
+
+SELECT 
+ A.OBJECTVALUE1,
+ A.OBJECTID2,
+ A.OBJECTVALUE2,
+     F.FIELDNAME,
+    (case
+        when F.FIELDTYPE = 0 then F.FIELDTYPE || ' = Character'
+        when F.FIELDTYPE = 1 then F.FIELDTYPE || ' = Long Character'
+        when F.FIELDTYPE = 2 then F.FIELDTYPE || ' = Number'
+        when F.FIELDTYPE = 3 then F.FIELDTYPE || ' = Signed Number'
+        when F.FIELDTYPE = 4 then F.FIELDTYPE || ' = Date'
+        when F.FIELDTYPE = 5 then F.FIELDTYPE || ' = Time'
+        when F.FIELDTYPE = 6 then F.FIELDTYPE || ' = DateTime'
+        when F.FIELDTYPE = 8 then F.FIELDTYPE || ' = Image OR Attachment'
+        when F.FIELDTYPE = 9 then F.FIELDTYPE || ' = ImageReference'
+        else 'Unknown' end) as FIELDTYPE,
+    L.LABEL_ID,
+    L.LONGNAME,
+    L.SHORTNAME,
+    L.DEFAULT_LABEL,
+    F.LENGTH,
+    F.DECIMALPOS,
+    F.FORMAT,
+    F.FORMATLENGTH,
+    F.IMAGE_FMT,
+    F.FORMATFAMILY,
+    F.DISPFMTNAME,
+    F.DEFCNTRYYR,
+    F.IMEMODE,
+    F.KBLAYOUT,
+    F.DESCRLONG,
+    F.LASTUPDDTTM,
+    F.LASTUPDOPRID,
+ A.SOURCESTATUS,
+ CASE
+ WHEN A.SOURCESTATUS = 0 THEN 'Unknown'
+ WHEN A.SOURCESTATUS = 1 THEN 'Absent'
+ WHEN A.SOURCESTATUS = 2 THEN 'Changed'
+ WHEN A.SOURCESTATUS = 3 THEN 'Unchanged'
+ WHEN A.SOURCESTATUS = 4 THEN 'Custom Changed'
+ WHEN A.SOURCESTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.SOURCESTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Source Status",
+ A.TARGETSTATUS,
+ CASE
+ WHEN A.TARGETSTATUS = 0 THEN 'Unknown'
+ WHEN A.TARGETSTATUS = 1 THEN 'Absent'
+ WHEN A.TARGETSTATUS = 2 THEN 'Changed'
+ WHEN A.TARGETSTATUS = 3 THEN 'Unchanged'
+ WHEN A.TARGETSTATUS = 4 THEN 'Custom Changed'
+ WHEN A.TARGETSTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.TARGETSTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Target Status"
+ FROM PSPROJECTITEM A, (PSDBFIELD F inner join PSDBFLDLABL L
+    on F.FIELDNAME = L.FIELDNAME)
+ WHERE A.PROJECTNAME IN ('XXXXXXXXXXXXXX')
+ and A.OBJECTTYPE = 2 and A.OBJECTID1 = 6 and A.OBJECTID2 = 102
+ and A.OBJECTVALUE1 = F.FIELDNAME
+ and A.OBJECTVALUE2 = L.LABEL_ID
+ ORDER BY  A.OBJECTTYPE,
+ A.OBJECTID1,
+ A.OBJECTID2,
+ A.OBJECTID3,
+ A.OBJECTID4
+ WITH UR;
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+SQL for Trans late Value changes 
+
+
+SELECT DISTINCT A.objectvalue1, 
+                A.objectvalue2, 
+                T.fieldname, 
+                T.fieldvalue, 
+                T.effdt, 
+                T.eff_status, 
+                T.xlatlongname, 
+                T.xlatshortname, 
+                T.lastupdoprid, 
+                (SELECT X.xlatlongname 
+                 FROM   psxlatitem X 
+                        LEFT JOIN psdbfield F 
+                               ON X.fieldvalue = F.objectownerid 
+                 WHERE  X.fieldname = 'OBJECTOWNERID' 
+                        AND F.fieldname = T.fieldname 
+                        AND X.eff_status = 'A' 
+                        AND ( X.effdt IS NULL 
+                               OR ( X.effdt = (SELECT Max(X1.effdt) 
+                                               FROM   psxlatitem X1 
+                                               WHERE  X.fieldname = X1.fieldname 
+                                                      AND X.fieldvalue = 
+                                                          X1.fieldvalue 
+                                                      AND X.effdt <= CURRENT 
+                                                          DATE) ) )) AS Owner, 
+                CASE 
+                  WHEN A.sourcestatus = 0 THEN 'Unknown' 
+                  WHEN A.sourcestatus = 1 THEN 'Absent' 
+                  WHEN A.sourcestatus = 2 THEN 'Changed' 
+                  WHEN A.sourcestatus = 3 THEN 'Unchanged' 
+                  WHEN A.sourcestatus = 4 THEN 'Custom Changed' 
+                  WHEN A.sourcestatus = 5 THEN 'Custom Unchanged' 
+                  WHEN A.sourcestatus = 6 THEN 'Same' 
+                  ELSE 'Unknown' 
+                END 
+                "Source Status", 
+                CASE 
+                  WHEN A.targetstatus = 0 THEN 'Unknown' 
+                  WHEN A.targetstatus = 1 THEN 'Absent' 
+                  WHEN A.targetstatus = 2 THEN 'Changed' 
+                  WHEN A.targetstatus = 3 THEN 'Unchanged' 
+                  WHEN A.targetstatus = 4 THEN 'Custom Changed' 
+                  WHEN A.targetstatus = 5 THEN 'Custom Unchanged' 
+                  WHEN A.targetstatus = 6 THEN 'Same' 
+                  ELSE 'Unknown' 
+                END 
+                "Target Status" 
+FROM   psprojectitem A 
+       LEFT OUTER JOIN psxlatitem T 
+                    ON A.objectvalue1 = T.fieldname 
+                       AND A.objectvalue2 = T.fieldvalue 
+WHERE  A.projectname IN ( 'XXXXXXXXXXXXXX' ) 
+       AND A.objecttype = 4 
+       AND A.objectid1 = 6 
+       AND A.objectid2 = 22 
+ORDER  BY 1, 
+          2, 
+          3, 
+          4 
+WITH UR;
+
+++++++++++++++++++++++++++++++++++++++++
+SQL for Record Changes
+
+ SELECT 
+ A.OBJECTID1,
+ A.OBJECTVALUE1,
+ A.OBJECTID2,
+ A.OBJECTVALUE2,
+ A.OBJECTVALUE4,
+B.RECNAME,
+CASE B.RECTYPE 
+WHEN 0 THEN 'Table' 
+WHEN 1 THEN 'View' 
+WHEN 2 THEN 'Derived' 
+WHEN 3 THEN 'Sub Record' 
+WHEN 5 THEN 'Dynamic View' 
+WHEN 6 THEN 'Query View' 
+WHEN 7 THEN 'Temporary Table' 
+ELSE TO_CHAR(B.RECTYPE) 
+END CASE,
+B.PARENTRECNAME,
+B.AUDITRECNAME,
+CASE WHEN BITAND(B.RECUSE,1) > 0 THEN 'Y' ELSE 'N' END AUDIT_ADD,
+CASE WHEN BITAND(B.RECUSE,2) > 0 THEN 'Y' ELSE 'N' END AUDIT_CHANGE,
+CASE WHEN BITAND(B.RECUSE,4) > 0 THEN 'Y' ELSE 'N' END AUDIT_DELETE,
+CASE WHEN BITAND(B.RECUSE,8) > 0 THEN 'Y' ELSE 'N' END AUDIT_SELECTIVE,
+B.RECDESCR,
+B.OBJECTOWNERID,
+(SELECT X.XLATLONGNAME FROM PSXLATITEM X WHERE X.FIELDNAME = 'OBJECTOWNERID'
+AND X.FIELDVALUE = B.OBJECTOWNERID
+AND X.EFF_STATUS = 'A'
+AND (X.EFFDT IS NULL OR (X.EFFDT = (SELECT MAX(X1.EFFDT) FROM PSXLATITEM X1 
+WHERE X.FIELDNAME = X1.FIELDNAME
+AND X.FIELDVALUE = X1.FIELDVALUE
+AND X.EFFDT <= CURRENT DATE)))),
+B.DESCRLONG,
+A.SOURCESTATUS,
+ CASE
+ WHEN A.SOURCESTATUS = 0 THEN 'Unknown'
+ WHEN A.SOURCESTATUS = 1 THEN 'Absent'
+ WHEN A.SOURCESTATUS = 2 THEN 'Changed'
+ WHEN A.SOURCESTATUS = 3 THEN 'Unchanged'
+ WHEN A.SOURCESTATUS = 4 THEN 'Custom Changed'
+ WHEN A.SOURCESTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.SOURCESTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Source Status",
+ A.TARGETSTATUS,
+ CASE
+ WHEN A.TARGETSTATUS = 0 THEN 'Unknown'
+ WHEN A.TARGETSTATUS = 1 THEN 'Absent'
+ WHEN A.TARGETSTATUS = 2 THEN 'Changed'
+ WHEN A.TARGETSTATUS = 3 THEN 'Unchanged'
+ WHEN A.TARGETSTATUS = 4 THEN 'Custom Changed'
+ WHEN A.TARGETSTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.TARGETSTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Target Status",
+ A.UPGRADEACTION,
+ CASE
+ WHEN A.UPGRADEACTION = 0 THEN 'Copy'
+ WHEN A.UPGRADEACTION = 1 THEN 'DELETE'
+ WHEN A.UPGRADEACTION = 2 THEN 'None'
+ WHEN A.UPGRADEACTION = 3 THEN 'CopyProp'
+ ELSE 'Unknown'
+ END "Upgrade Action",
+ A.TAKEACTION,
+ CASE
+ WHEN A.TAKEACTION = 0 THEN 'No'
+ WHEN A.TAKEACTION = 1 THEN 'Yes'
+ ELSE 'Unknown'
+ END "Take Action?",
+ A.COPYDONE,
+ CASE
+ WHEN A.COPYDONE = 0 THEN 'No'
+ WHEN A.COPYDONE = 1 THEN 'Yes'
+ ELSE 'Unknown'
+ END "Copy Done?"
+ FROM PSPROJECTITEM A left outer join PSRECDEFN B
+ on  A.OBJECTVALUE1 = B.RECNAME
+ WHERE A.PROJECTNAME IN ('XXXXXXXXXXXXXX')
+ and A.OBJECTTYPE = 0 and OBJECTID2 = 0
+ ORDER BY  A.OBJECTTYPE,
+ A.OBJECTID1,
+ A.OBJECTID2,
+ A.OBJECTID3,
+ A.OBJECTID4
+ WITH UR;
+
++++++++++++++++++++++++++++++++++++++++++++++++++++
+SQL for Record Field Changes
+
+SELECT a.recname, 
+       CASE R.rectype 
+         WHEN 0 THEN 'Table' 
+         WHEN 1 THEN 'View' 
+         WHEN 2 THEN 'Derived' 
+         WHEN 3 THEN 'Sub Record' 
+         WHEN 5 THEN 'Dynamic View' 
+         WHEN 6 THEN 'Query View' 
+         WHEN 7 THEN 'Temporary Table' 
+         ELSE To_char(R.rectype) 
+       END                                        RecType, 
+       a.fieldname, 
+       b.fieldtype, 
+       CASE 
+         WHEN b.fieldtype = 0 THEN 'CHAR' 
+         WHEN b.fieldtype = 1 THEN 'LONG CHAR' 
+         WHEN b.fieldtype = 2 THEN 'NUMBER' 
+         WHEN b.fieldtype = 3 THEN 'SIGNED NBR' 
+         WHEN b.fieldtype = 4 THEN 'DATE' 
+         WHEN b.fieldtype = 5 THEN 'TIME' 
+         WHEN b.fieldtype = 6 THEN 'DATETIME' 
+         WHEN b.fieldtype = 7 
+               OR b.fieldtype = 8 THEN 'IMAGE' 
+         WHEN b.fieldtype = 9 THEN 'IMAGE REF' 
+         ELSE NULL 
+       END                                        AS fieldtype, 
+       CASE 
+         WHEN b.fieldtype = 2 
+               OR b.fieldtype = 3 THEN Rtrim(CHAR(b.length)) 
+                                       || '.' 
+                                       || CHAR(b.decimalpos) 
+         ELSE CHAR(b.length) 
+       END                                        AS fldlen, 
+       CASE 
+         WHEN A.subrecord = 'Y' THEN 'YES' 
+         ELSE 'NO' 
+       END                                        AS SUBRECORD, 
+       a.deffieldname, 
+       a.edittable                                AS prompt_table, 
+       a.setcntrlfld                              AS set_control_fld, 
+       a.curctlfieldname                      AS Currency_cntl_fld,
+       CASE 
+         WHEN a.defrecname = '' THEN a.deffieldname 
+         ELSE Rtrim(a.defrecname) 
+              || '.' 
+              || a.deffieldname 
+       END                                        AS default_value, 
+       Decode (Bitand(useedit, 1), 1, 'Y', 
+                                   ' ')           "KEY", 
+       Decode (Bitand(useedit, 2), 2, 'Y', 
+                                   ' ')           "KEY_DUP", 
+       Decode (Bitand(useedit, 4), 4, 'Y', 
+                                   ' ')           "SYS", 
+       ( Decode (Bitand(useedit, 8), 8, 'A', 
+                                     ' ') 
+         || Decode (Bitand(useedit, 128), 128, 'C', 
+                                          ' ') 
+         || Decode (Bitand(useedit, 1024), 1024, 'D', 
+                                           ' ') ) "AUDIT", 
+       Decode (Bitand(useedit, 16), 16, 'Y', 
+                                    ' ')          "KEY_ALT", 
+       Decode (Bitand(useedit, 32), 32, 'Y', 
+                                    ' ')          "LST_BOX", 
+       Decode (Bitand(useedit, 64), 64, 'Y', 
+                                    ' ')          "DESC", 
+       Decode (Bitand(useedit, 256), 256, 'Y', 
+                                     ' ')         "REQUIRED", 
+       Decode (Bitand(useedit, 512), 512, 'Y', 
+                                     ' ')         "XLAT", 
+       Decode (Bitand(useedit, 2048), 2048, 'Y', 
+                                      ' ')        "SRCH_KEY", 
+       Decode (Bitand(useedit, 4096), 4096, 'Y', 
+                                      ' ')        "REASNBL_DATE", 
+       Decode (Bitand(useedit, 8192), 8192, 'Y', 
+                                      ' ')        "YES/NO", 
+       Decode (Bitand(useedit, 16384), 16384, 'Y', 
+                                       ' ')       "PROMPT", 
+       Decode (Bitand(useedit, 32768), 32768, 'Y', 
+                                       ' ')       "AUTO_UPD", 
+       Decode (Bitand(useedit, 65536), 65536, 'Y', 
+                                       ' ')       "???1", 
+       Decode (Bitand(useedit, 131072), 131072, 'Y', 
+                                        ' ')      "???2", 
+       Decode (Bitand(useedit, 262144), 262144, 'Y', 
+                                        ' ')      "FROM_SRCH_FLD", 
+       Decode (Bitand(useedit, 524288), 524288, 'Y', 
+                                        ' ')      "THROUGH_SRCH_FLD", 
+       Decode (Bitand(useedit, 1048576), 1048576, 'Y', 
+                                         ' ')     "1/0 TBL EDIT", 
+       Decode (Bitand(useedit, 2097152), 2097152, 'Y', 
+                                         ' ')     "DISABLE_ADV_SEARCH", 
+       Decode (Bitand(useedit, 4194304), 4194304, 'Y', 
+                                         ' ')     "LONG_REGULAR_FIELD", 
+       Decode (Bitand(useedit, 8388608), 8388608, 'Y', 
+                                         ' ')     "USE_DFLT_LBL", 
+       Decode (Bitand(useedit, 16777216), 16777216, 'Y', 
+                                          ' ')    "DFLT_SRCH_FLD", 
+       Decode (Bitand(useedit, 33554432), 33554432, 'Y', 
+                                          ' ')    "MIXED_FORMAT", 
+       Decode (Bitand(useedit, 67108864), 67108864, 'Y', 
+                                          ' ')    "BIT_67108864", 
+       Decode (Bitand(useedit, 134217728), 134217728, 'Y', 
+                                           ' ') 
+       "Allow_Search_Events_for_Prompt_Dialogs", 
+       Decode (Bitand(useedit, 268435456), 268435456, 'Y', 
+                                           ' ')   "SRCH_EDIT", 
+       Decode (Bitand(useedit, 536870912), 536870912, 'Y', 
+                                           ' ') 
+       "Display_in_Autocomplete_Window", 
+       Decode (Bitand(useedit, 1073741824), 1073741824, 'Y', 
+                                            ' ')  "Autocomplete", 
+       Decode (Bitand(useedit, 2147483648), 2147483648, 'Y', 
+                                            ' ')  "Persist_in_Menu ", 
+       a.lastupdoprid, 
+       R.recdescr, 
+       R.objectownerid, 
+       (SELECT X.xlatlongname 
+        FROM   psxlatitem X 
+        WHERE  X.fieldname = 'OBJECTOWNERID' 
+               AND X.fieldvalue = R.objectownerid 
+               AND X.eff_status = 'A' 
+               AND ( X.effdt IS NULL 
+                      OR ( X.effdt = (SELECT Max(X1.effdt) 
+                                      FROM   psxlatitem X1 
+                                      WHERE  X.fieldname = X1.fieldname 
+                                             AND X.fieldvalue = X1.fieldvalue 
+                                             AND X.effdt <= CURRENT DATE) ) )), 
+       R.descrlong 
+FROM   psprojectitem P, 
+       psrecdefn R, 
+       (psrecfield a 
+        LEFT JOIN psdbfield b 
+               ON a.fieldname = b.fieldname ) 
+WHERE  P.projectname IN ( 'XXXXXXXXXXXXXX' ) 
+       AND P.objecttype = 0 
+       AND P.objectid1 = 1 
+       AND P.objectid2 = 2
+       AND P.objectvalue1 = a.recname 
+       AND P.objectvalue2 = a.fieldname 
+       AND a.recname = R.recname 
+ORDER  BY a.recname, 
+          a.fieldnum, 
+          a.fieldname; 
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+SQL fro Record Field PC changes
+
+SELECT 
+ A.OBJECTID1,
+ trim(A.OBJECTVALUE1),
+ A.OBJECTID2,
+ trim(A.OBJECTVALUE2),
+A.OBJECTID3,
+ trim(A.OBJECTVALUE3),
+A.OBJECTID4,
+ TRIM(B.OBJECTVALUE1) ||'.'||TRIM(B.OBJECTVALUE2)||'.'||TRIM(B.OBJECTVALUE3)   AS RecordFldPC, B.PROGSEQ, B.PCTEXT,
+ A.SOURCESTATUS,
+ CASE
+ WHEN A.SOURCESTATUS = 0 THEN 'Unknown'
+ WHEN A.SOURCESTATUS = 1 THEN 'Absent'
+ WHEN A.SOURCESTATUS = 2 THEN 'Changed'
+ WHEN A.SOURCESTATUS = 3 THEN 'Unchanged'
+ WHEN A.SOURCESTATUS = 4 THEN 'Custom Changed'
+ WHEN A.SOURCESTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.SOURCESTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Source Status",
+ A.TARGETSTATUS,
+ CASE
+ WHEN A.TARGETSTATUS = 0 THEN 'Unknown'
+ WHEN A.TARGETSTATUS = 1 THEN 'Absent'
+ WHEN A.TARGETSTATUS = 2 THEN 'Changed'
+ WHEN A.TARGETSTATUS = 3 THEN 'Unchanged'
+ WHEN A.TARGETSTATUS = 4 THEN 'Custom Changed'
+ WHEN A.TARGETSTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.TARGETSTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Target Status",
+ A.UPGRADEACTION,
+ CASE
+ WHEN A.UPGRADEACTION = 0 THEN 'Copy'
+ WHEN A.UPGRADEACTION = 1 THEN 'DELETE'
+ WHEN A.UPGRADEACTION = 2 THEN 'None'
+ WHEN A.UPGRADEACTION = 3 THEN 'CopyProp'
+ ELSE 'Unknown'
+ END "Upgrade Action",
+ A.TAKEACTION,
+ CASE
+ WHEN A.TAKEACTION = 0 THEN 'No'
+ WHEN A.TAKEACTION = 1 THEN 'Yes'
+ ELSE 'Unknown'
+ END "Take Action?",
+ A.COPYDONE,
+ CASE
+ WHEN A.COPYDONE = 0 THEN 'No'
+ WHEN A.COPYDONE = 1 THEN 'Yes'
+ ELSE 'Unknown'
+ END "Copy Done?"
+ FROM PSPROJECTITEM A left outer join PSPCMTXT B
+on A.OBJECTVALUE1 = B.OBJECTVALUE1 AND A.OBJECTVALUE2 = B.OBJECTVALUE2 AND A.OBJECTVALUE3 = B.OBJECTVALUE3
+ WHERE A.PROJECTNAME IN ('XXXXXXXXXXXXXX')
+ and A.OBJECTTYPE = 8 and A.OBJECTID1 = 1 and A.OBJECTID2 = 2  and A.OBJECTID3 = 12  
+ ORDER BY  A.OBJECTTYPE,
+ A.OBJECTID1,
+ A.OBJECTID2,
+ A.OBJECTID3,
+ A.OBJECTID4
+ WITH UR;
+
+
+++++++++++++++++++++++++++++++++++++++++++
+SQL for AppPackage PC Changes
+
+
+SELECT 
+ A.OBJECTID1,
+ B.OBJECTID1,
+ trim(A.OBJECTVALUE1),
+ A.OBJECTID2,
+ B.OBJECTID2,
+ trim(A.OBJECTVALUE2),
+A.OBJECTID3,
+ B.OBJECTID3,
+ trim(A.OBJECTVALUE3),
+A.OBJECTID4,
+ B.OBJECTID4,
+ trim(A.OBJECTVALUE4),
+ TRIM(B.OBJECTVALUE1) ||'.'||TRIM(B.OBJECTVALUE2)||'.'||TRIM(B.OBJECTVALUE3)  AS ApplicationPackage, B.PROGSEQ, B.PCTEXT,
+ A.SOURCESTATUS,
+ CASE
+ WHEN A.SOURCESTATUS = 0 THEN 'Unknown'
+ WHEN A.SOURCESTATUS = 1 THEN 'Absent'
+ WHEN A.SOURCESTATUS = 2 THEN 'Changed'
+ WHEN A.SOURCESTATUS = 3 THEN 'Unchanged'
+ WHEN A.SOURCESTATUS = 4 THEN 'Custom Changed'
+ WHEN A.SOURCESTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.SOURCESTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Source Status",
+ A.TARGETSTATUS,
+ CASE
+ WHEN A.TARGETSTATUS = 0 THEN 'Unknown'
+ WHEN A.TARGETSTATUS = 1 THEN 'Absent'
+ WHEN A.TARGETSTATUS = 2 THEN 'Changed'
+ WHEN A.TARGETSTATUS = 3 THEN 'Unchanged'
+ WHEN A.TARGETSTATUS = 4 THEN 'Custom Changed'
+ WHEN A.TARGETSTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.TARGETSTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Target Status",
+ A.UPGRADEACTION,
+ CASE
+ WHEN A.UPGRADEACTION = 0 THEN 'Copy'
+ WHEN A.UPGRADEACTION = 1 THEN 'DELETE'
+ WHEN A.UPGRADEACTION = 2 THEN 'None'
+ WHEN A.UPGRADEACTION = 3 THEN 'CopyProp'
+ ELSE 'Unknown'
+ END "Upgrade Action",
+ A.TAKEACTION,
+ CASE
+ WHEN A.TAKEACTION = 0 THEN 'No'
+ WHEN A.TAKEACTION = 1 THEN 'Yes'
+ ELSE 'Unknown'
+ END "Take Action?",
+ A.COPYDONE,
+ CASE
+ WHEN A.COPYDONE = 0 THEN 'No'
+ WHEN A.COPYDONE = 1 THEN 'Yes'
+ ELSE 'Unknown'
+ END "Copy Done?"
+ FROM PSPROJECTITEM A, PSPCMTXT B
+ WHERE A.PROJECTNAME IN ('XXXXXXXXXXXXXX')
+ and A.OBJECTTYPE = 58 and A.OBJECTID1 = 104 and A.OBJECTID2 in (105,107)  and A.OBJECTID3 in (0, 106, 107) and A.OBJECTID4 in (0, 107) 
+ AND A.OBJECTVALUE1 = B.OBJECTVALUE1 AND A.OBJECTVALUE2 = B.OBJECTVALUE2 AND A.OBJECTVALUE3 = B.OBJECTVALUE3 AND A.OBJECTVALUE4 = B.OBJECTVALUE4  
+ and A.SOURCESTATUS = 2
+ AND A.TARGETSTATUS in (4,5)
+ ORDER BY  A.OBJECTTYPE,
+ A.OBJECTID1,
+ A.OBJECTID2,
+ A.OBJECTID3,
+ A.OBJECTID4
+ WITH UR;
+ +
+ SELECT 
+ A.OBJECTID1,
+ B.OBJECTID1,
+ trim(A.OBJECTVALUE1),
+ A.OBJECTID2,
+ B.OBJECTID2,
+ trim(A.OBJECTVALUE2),
+A.OBJECTID3,
+ B.OBJECTID3,
+ trim(A.OBJECTVALUE3),
+A.OBJECTID4,
+ B.OBJECTID4,
+ trim(A.OBJECTVALUE4),
+ TRIM(B.OBJECTVALUE1) ||'.'||TRIM(B.OBJECTVALUE2)||'.'||TRIM(B.OBJECTVALUE3)  AS ApplicationPackage, B.PROGSEQ, B.PCTEXT,
+ A.SOURCESTATUS,
+ CASE
+ WHEN A.SOURCESTATUS = 0 THEN 'Unknown'
+ WHEN A.SOURCESTATUS = 1 THEN 'Absent'
+ WHEN A.SOURCESTATUS = 2 THEN 'Changed'
+ WHEN A.SOURCESTATUS = 3 THEN 'Unchanged'
+ WHEN A.SOURCESTATUS = 4 THEN 'Custom Changed'
+ WHEN A.SOURCESTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.SOURCESTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Source Status",
+ A.TARGETSTATUS,
+ CASE
+ WHEN A.TARGETSTATUS = 0 THEN 'Unknown'
+ WHEN A.TARGETSTATUS = 1 THEN 'Absent'
+ WHEN A.TARGETSTATUS = 2 THEN 'Changed'
+ WHEN A.TARGETSTATUS = 3 THEN 'Unchanged'
+ WHEN A.TARGETSTATUS = 4 THEN 'Custom Changed'
+ WHEN A.TARGETSTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.TARGETSTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Target Status",
+ A.UPGRADEACTION,
+ CASE
+ WHEN A.UPGRADEACTION = 0 THEN 'Copy'
+ WHEN A.UPGRADEACTION = 1 THEN 'DELETE'
+ WHEN A.UPGRADEACTION = 2 THEN 'None'
+ WHEN A.UPGRADEACTION = 3 THEN 'CopyProp'
+ ELSE 'Unknown'
+ END "Upgrade Action",
+ A.TAKEACTION,
+ CASE
+ WHEN A.TAKEACTION = 0 THEN 'No'
+ WHEN A.TAKEACTION = 1 THEN 'Yes'
+ ELSE 'Unknown'
+ END "Take Action?",
+ A.COPYDONE,
+ CASE
+ WHEN A.COPYDONE = 0 THEN 'No'
+ WHEN A.COPYDONE = 1 THEN 'Yes'
+ ELSE 'Unknown'
+ END "Copy Done?"
+ FROM PSPROJECTITEM A, PSPCMTXT B
+ WHERE A.PROJECTNAME IN ('XXXXXXXXXXXXXX')
+ and A.OBJECTTYPE = 58 and A.OBJECTID1 = 104 and A.OBJECTID2 in (105,107)  and A.OBJECTID3 in (0, 106, 107) and A.OBJECTID4 in (0) 
+ AND A.OBJECTVALUE1 = B.OBJECTVALUE1 AND A.OBJECTVALUE2 = B.OBJECTVALUE2 AND A.OBJECTVALUE3 = B.OBJECTVALUE3   
+ and A.SOURCESTATUS = 2
+ AND A.TARGETSTATUS in (4,5)
+ ORDER BY  A.OBJECTTYPE,
+ A.OBJECTID1,
+ A.OBJECTID2,
+ A.OBJECTID3,
+ A.OBJECTID4
+ WITH UR;
++
+SELECT 
+ A.OBJECTID1,
+ B.OBJECTID1,
+ trim(A.OBJECTVALUE1),
+ A.OBJECTID2,
+ B.OBJECTID2,
+ trim(A.OBJECTVALUE2),
+A.OBJECTID3,
+ B.OBJECTID3,
+ trim(A.OBJECTVALUE3),
+A.OBJECTID4,
+ B.OBJECTID4,
+ trim(A.OBJECTVALUE4),
+ TRIM(B.OBJECTVALUE1) ||'.'||TRIM(B.OBJECTVALUE2)||'.'||TRIM(B.OBJECTVALUE3)  AS ApplicationPackage, B.PROGSEQ, B.PCTEXT,
+ A.SOURCESTATUS,
+ CASE
+ WHEN A.SOURCESTATUS = 0 THEN 'Unknown'
+ WHEN A.SOURCESTATUS = 1 THEN 'Absent'
+ WHEN A.SOURCESTATUS = 2 THEN 'Changed'
+ WHEN A.SOURCESTATUS = 3 THEN 'Unchanged'
+ WHEN A.SOURCESTATUS = 4 THEN 'Custom Changed'
+ WHEN A.SOURCESTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.SOURCESTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Source Status",
+ A.TARGETSTATUS,
+ CASE
+ WHEN A.TARGETSTATUS = 0 THEN 'Unknown'
+ WHEN A.TARGETSTATUS = 1 THEN 'Absent'
+ WHEN A.TARGETSTATUS = 2 THEN 'Changed'
+ WHEN A.TARGETSTATUS = 3 THEN 'Unchanged'
+ WHEN A.TARGETSTATUS = 4 THEN 'Custom Changed'
+ WHEN A.TARGETSTATUS = 5 THEN 'Custom Unchanged'
+ WHEN A.TARGETSTATUS = 6 THEN 'Same'
+ ELSE 'Unknown'
+ END "Target Status",
+ A.UPGRADEACTION,
+ CASE
+ WHEN A.UPGRADEACTION = 0 THEN 'Copy'
+ WHEN A.UPGRADEACTION = 1 THEN 'DELETE'
+ WHEN A.UPGRADEACTION = 2 THEN 'None'
+ WHEN A.UPGRADEACTION = 3 THEN 'CopyProp'
+ ELSE 'Unknown'
+ END "Upgrade Action",
+ A.TAKEACTION,
+ CASE
+ WHEN A.TAKEACTION = 0 THEN 'No'
+ WHEN A.TAKEACTION = 1 THEN 'Yes'
+ ELSE 'Unknown'
+ END "Take Action?",
+ A.COPYDONE,
+ CASE
+ WHEN A.COPYDONE = 0 THEN 'No'
+ WHEN A.COPYDONE = 1 THEN 'Yes'
+ ELSE 'Unknown'
+ END "Copy Done?"
+ FROM PSPROJECTITEM A, PSPCMTXT B
+ WHERE A.PROJECTNAME IN ('XXXXXXXXXXXXXX')
+ and A.OBJECTTYPE = 58 and A.OBJECTID1 = 104 and A.OBJECTID2 in (105,107)  and A.OBJECTID3 in (0) and A.OBJECTID4 in (0) 
+ AND A.OBJECTVALUE1 = B.OBJECTVALUE1 AND A.OBJECTVALUE2 = B.OBJECTVALUE2 
+ and A.SOURCESTATUS = 2
+ AND A.TARGETSTATUS in (4,5)
+ ORDER BY  A.OBJECTTYPE,
+ A.OBJECTID1,
+ A.OBJECTID2,
+ A.OBJECTID3,
+ A.OBJECTID4
+ WITH UR;
+ 
+ ++++++++++++++++++++++++++++++++++++++++++++++++
+ 
+ Other Miscellaneous items
+
+
 --Scripts to identify changes for Upgrade
 -- Application Engine
 SELECT ITEM.OBJECTVALUE1 AS "Application Engine", DEFN.LASTUPDOPRID, DEFN.LASTUPDDTTM
